@@ -200,9 +200,9 @@ export function CalculatorClient() {
                     onChange={e => setForm(p => ({ ...p, printerId: e.target.value }))}
                     className="w-full h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
                   >
-                    <option value="" disabled>Оберіть принтер</option>
+                    <option value="" disabled hidden>Оберіть принтер</option>
                     {printers.map(p => (
-                      <option key={p.id} value={p.id}>{p.brand ? `${p.brand} ${p.name}` : p.name}</option>
+                      <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
                 </div>
