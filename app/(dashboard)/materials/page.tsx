@@ -1,12 +1,11 @@
 import { Header } from '@/components/layout/header'
+import { MaterialsClient } from './materials-client'
 
 export default function MaterialsPage() {
   return (
     <>
       <Header title="Матеріали" />
-      <div className="p-6">
-        <p className="text-muted-foreground">Тут буде каталог пластиків.</p>
-      </div>
+      <MaterialsClient />
     </>
   )
 }
