@@ -1,12 +1,11 @@
 import { Header } from '@/components/layout/header'
+import { CalculationsClient } from './calculations-client'
 
 export default function CalculationsPage() {
   return (
     <>
       <Header title="Розрахунки" />
-      <div className="p-6">
-        <p className="text-muted-foreground">Тут буде бібліотека розрахунків.</p>
-      </div>
+      <CalculationsClient />
     </>
   )
 }
