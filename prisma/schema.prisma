@@ -1,0 +1,156 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  password        String
+  name            String?
+  businessName    String?
+  hourlyRate      Float    @default(0)
+  electricityRate Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  printers     Printer[]
+  materials    Material[]
+  calculations Calculation[]
+}
+
+model Printer {
+  id                        String   @id @default(cuid())
+  userId                    String
+  name                      String
+  brand                     String?
+  purchasePrice             Float
+  powerWatts                Float
+  lifetimeHours             Float    @default(2000)
+  maintenanceReservePerHour Float    @default(0)
+  notes                     String?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  calculations Calculation[]
+}
+
+enum MaterialType {
+  PLA
+  PETG
+  ABS
+  ASA
+  TPU
+  NYLON
+  RESIN
+  OTHER
+}
+
+model Material {
+  id          String       @id @default(cuid())
+  userId      String
+  name        String
+  brand       String?
+  color       String?
+  colorHex    String?
+  type        MaterialType @default(PLA)
+  pricePerKg  Float
+  density     Float        @default(1.24)
+  failureRate Float        @default(0.05)
+  notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purchases    MaterialPurchase[]
+  calculations Calculation[]
+}
+
+model MaterialPurchase {
+  id         String   @id @default(cuid())
+  materialId String
+  date       DateTime @default(now())
+  pricePerKg Float
+  weightKg   Float
+  supplier   String?
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+}
+
+enum CalculationStatus {
+  DRAFT
+  QUOTED
+  APPROVED
+  PRINTING
+  DONE
+}
+
+model Calculation {
+  id         String            @id @default(cuid())
+  userId     String
+  printerId  String?
+  materialId String?
+  name       String
+  status     CalculationStatus @default(DRAFT)
+
+  // Print parameters
+  weightGrams      Float   @default(0)
+  printTimeMinutes Float   @default(0)
+  layerHeight      Float   @default(0.2)
+  infillPercent    Float   @default(15)
+  hasSupports      Boolean @default(false)
+  supportDensity   Float   @default(15)
+  copies           Int     @default(1)
+
+  // Labor time
+  setupMinutes    Float @default(15)
+  postProcMinutes Float @default(0)
+
+  // Calculated costs (stored for history)
+  materialCost Float @default(0)
+  machineCost  Float @default(0)
+  laborCost    Float @default(0)
+  overheadCost Float @default(0)
+  totalCost    Float @default(0)
+
+  // Pricing
+  marginPercent   Float @default(30)
+  discountPercent Float @default(0)
+  sellingPrice    Float @default(0)
+
+  // Client
+  clientName      String?
+  clientEmail     String?
+  quoteToken      String?  @unique
+  quoteApprovedAt DateTime?
+
+  // Files
+  photoUrl   String?
+  stlFileUrl String?
+  notes      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  printer          Printer?             @relation(fields: [printerId], references: [id], onDelete: SetNull)
+  material         Material?            @relation(fields: [materialId], references: [id], onDelete: SetNull)
+  postProcessSteps PostProcessingStep[]
+}
+
+model PostProcessingStep {
+  id            String @id @default(cuid())
+  calculationId String
+  name          String
+  timeMinutes   Float  @default(0)
+  materialCost  Float  @default(0)
+
+  calculation Calculation @relation(fields: [calculationId], references: [id], onDelete: Cascade)
+}
