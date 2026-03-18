@@ -17,44 +17,53 @@ type Material = { id: string; name: string; brand: string | null; type: string; 
 type Printer = { id: string; name: string; brand: string | null; purchasePrice: number; powerWatts: number; lifetimeHours: number; maintenanceReservePerHour: number }
 type PostStep = { name: string; timeMinutes: number; materialCost: number }
 
+function useDropdownPos(open: boolean) {
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
+  useEffect(() => {
+    if (open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX, width: r.width })
+    }
+  }, [open])
+  return { btnRef, pos }
+}
+
 function PrinterSelect({ printers, value, onChange }: { printers: Printer[]; value: string; onChange: (id: string) => void }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const { btnRef, pos } = useDropdownPos(open)
   const selected = printers.find(p => p.id === value)
 
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    if (!open) return
+    function handle(e: MouseEvent) {
+      if (btnRef.current && !btnRef.current.contains(e.target as Node)) setOpen(false)
     }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [open, btnRef])
 
   return (
-    <div ref={ref} className="relative">
+    <div className="relative">
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen(o => !o)}
         className="w-full h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm text-left flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
       >
-        {selected ? (
-          <span className="truncate">{selected.name}</span>
-        ) : (
-          <span className="text-muted-foreground">Оберіть принтер</span>
-        )}
+        {selected ? <span className="truncate">{selected.name}</span> : <span className="text-muted-foreground">Оберіть принтер</span>}
         <svg className="ml-auto w-4 h-4 text-muted-foreground flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border border-input bg-white shadow-lg max-h-56 overflow-y-auto">
+        <div
+          className="fixed z-[200] rounded-lg border border-input bg-white shadow-lg max-h-56 overflow-y-auto"
+          style={{ top: pos.top, left: pos.left, width: pos.width }}
+        >
           {printers.length === 0 ? (
             <div className="px-3 py-2 text-sm text-muted-foreground">Немає принтерів</div>
           ) : printers.map(p => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => { onChange(p.id); setOpen(false) }}
-              className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${p.id === value ? 'bg-accent' : ''}`}
-            >
+            <button key={p.id} type="button" onClick={() => { onChange(p.id); setOpen(false) }}
+              className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${p.id === value ? 'bg-accent' : ''}`}>
               {p.name}
             </button>
           ))}
@@ -66,20 +75,22 @@ function PrinterSelect({ printers, value, onChange }: { printers: Printer[]; val
 
 function MaterialSelect({ materials, value, onChange }: { materials: Material[]; value: string; onChange: (id: string) => void }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const { btnRef, pos } = useDropdownPos(open)
   const selected = materials.find(m => m.id === value)
 
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    if (!open) return
+    function handle(e: MouseEvent) {
+      if (btnRef.current && !btnRef.current.contains(e.target as Node)) setOpen(false)
     }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [open, btnRef])
 
   return (
-    <div ref={ref} className="relative">
+    <div className="relative">
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen(o => !o)}
         className="w-full h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm text-left flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
@@ -96,16 +107,15 @@ function MaterialSelect({ materials, value, onChange }: { materials: Material[];
         <svg className="ml-auto w-4 h-4 text-muted-foreground flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border border-input bg-white shadow-lg max-h-56 overflow-y-auto">
+        <div
+          className="fixed z-[200] rounded-lg border border-input bg-white shadow-lg max-h-56 overflow-y-auto"
+          style={{ top: pos.top, left: pos.left, width: pos.width }}
+        >
           {materials.length === 0 ? (
             <div className="px-3 py-2 text-sm text-muted-foreground">Немає пластиків</div>
           ) : materials.map(m => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => { onChange(m.id); setOpen(false) }}
-              className={`w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-accent ${m.id === value ? 'bg-accent' : ''}`}
-            >
+            <button key={m.id} type="button" onClick={() => { onChange(m.id); setOpen(false) }}
+              className={`w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-accent ${m.id === value ? 'bg-accent' : ''}`}>
               <span className="w-4 h-4 rounded-full flex-shrink-0 border" style={{ backgroundColor: m.colorHex || '#ccc' }} />
               <span className="truncate font-medium">{m.name}</span>
               {m.color && <span className="text-muted-foreground text-xs flex-shrink-0 ml-auto">{m.color}</span>}

@@ -31,21 +31,31 @@ const TYPE_LABELS: Record<string, string> = {
 
 function TypeFilterDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
 
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    if (open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX })
     }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    function handle(e: MouseEvent) {
+      if (btnRef.current && !btnRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [open])
 
   const label = value === 'all' ? 'Всі типи' : TYPE_LABELS[value] ?? value
 
   return (
-    <div ref={ref} className="relative">
+    <div className="relative">
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen(o => !o)}
         className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm flex items-center gap-2 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/50"
@@ -54,19 +64,19 @@ function TypeFilterDropdown({ value, onChange }: { value: string; onChange: (v: 
         <svg className="w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 min-w-[120px] rounded-lg border border-input bg-white shadow-lg overflow-hidden">
-          <button
-            type="button"
-            onClick={() => { onChange('all'); setOpen(false) }}
-            className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${value === 'all' ? 'bg-accent font-medium' : ''}`}
-          >Всі типи</button>
+        <div
+          className="fixed z-[200] min-w-[120px] rounded-lg border border-input bg-white shadow-lg overflow-hidden"
+          style={{ top: pos.top, left: pos.left }}
+        >
+          <button type="button" onClick={() => { onChange('all'); setOpen(false) }}
+            className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${value === 'all' ? 'bg-accent font-medium' : ''}`}>
+            Всі типи
+          </button>
           {MATERIAL_TYPES.map(t => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => { onChange(t); setOpen(false) }}
-              className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${value === t ? 'bg-accent font-medium' : ''}`}
-            >{TYPE_LABELS[t]}</button>
+            <button key={t} type="button" onClick={() => { onChange(t); setOpen(false) }}
+              className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${value === t ? 'bg-accent font-medium' : ''}`}>
+              {TYPE_LABELS[t]}
+            </button>
           ))}
         </div>
       )}
