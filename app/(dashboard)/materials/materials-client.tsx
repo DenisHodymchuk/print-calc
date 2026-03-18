@@ -95,7 +95,7 @@ export function MaterialsClient() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Select value={filterType} onValueChange={setFilterType}>
+          <Select value={filterType} onValueChange={(v) => setFilterType(v ?? 'all')}>
             <SelectTrigger className="w-36">
               <SelectValue placeholder="Тип" />
             </SelectTrigger>

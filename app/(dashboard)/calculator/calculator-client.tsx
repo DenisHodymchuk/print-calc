@@ -143,7 +143,7 @@ export function CalculatorClient() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Принтер</Label>
-                  <Select value={form.printerId} onValueChange={v => setForm(p => ({ ...p, printerId: v }))}>
+                  <Select value={form.printerId} onValueChange={v => setForm(p => ({ ...p, printerId: v ?? '' }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Оберіть принтер" />
                     </SelectTrigger>
@@ -156,7 +156,7 @@ export function CalculatorClient() {
                 </div>
                 <div className="space-y-2">
                   <Label>Матеріал</Label>
-                  <Select value={form.materialId} onValueChange={v => setForm(p => ({ ...p, materialId: v }))}>
+                  <Select value={form.materialId} onValueChange={v => setForm(p => ({ ...p, materialId: v ?? '' }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Оберіть матеріал" />
                     </SelectTrigger>
@@ -338,7 +338,7 @@ export function CalculatorClient() {
                     <Pie data={chartData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="value">
                       {chartData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                     </Pie>
-                    <Tooltip formatter={(v: number) => `${v.toFixed(2)} ₴`} />
+                    <Tooltip formatter={(v) => typeof v === 'number' ? `${v.toFixed(2)} ₴` : v} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>

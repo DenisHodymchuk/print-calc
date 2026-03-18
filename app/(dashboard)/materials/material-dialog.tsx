@@ -103,7 +103,7 @@ export function MaterialDialog({ open, onOpenChange, material, onSaved }: Props)
             </div>
             <div className="space-y-2">
               <Label htmlFor="type">Тип</Label>
-              <Select value={form.type} onValueChange={(v) => setForm((p) => ({ ...p, type: v }))}>
+              <Select value={form.type} onValueChange={(v) => setForm((p) => ({ ...p, type: v ?? 'PLA' }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {MATERIAL_TYPES.map((t) => (

@@ -113,7 +113,7 @@ export function DashboardClient() {
                 <BarChart data={data.monthlyChart} barSize={20}>
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(v: number) => `${v.toFixed(0)} ₴`} />
+                  <Tooltip formatter={(v) => typeof v === 'number' ? `${v.toFixed(0)} ₴` : v} />
                   <Legend />
                   <Bar dataKey="revenue" name="Дохід" fill="#6366f1" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="cost" name="Витрати" fill="#f59e0b" radius={[4, 4, 0, 0]} />
