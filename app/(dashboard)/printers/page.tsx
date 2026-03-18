@@ -1,12 +1,11 @@
 import { Header } from '@/components/layout/header'
+import { PrintersClient } from './printers-client'
 
 export default function PrintersPage() {
   return (
     <>
       <Header title="Принтери" />
-      <div className="p-6">
-        <p className="text-muted-foreground">Тут будуть ваші принтери.</p>
-      </div>
+      <PrintersClient />
     </>
   )
 }
