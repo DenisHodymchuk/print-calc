@@ -115,7 +115,7 @@ export function DashboardClient() {
                   <YAxis tick={{ fontSize: 12 }} />
                   <Tooltip formatter={(v) => typeof v === 'number' ? `${v.toFixed(0)} ₴` : v} />
                   <Legend />
-                  <Bar dataKey="revenue" name="Дохід" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="revenue" name="Дохід" fill="#FF4500" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="cost" name="Витрати" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="profit" name="Прибуток" fill="#10b981" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -125,7 +125,7 @@ export function DashboardClient() {
                 <Calculator className="w-12 h-12 mb-3 opacity-30" />
                 <p>Немає даних для відображення</p>
                 <p className="text-sm">Створіть перший розрахунок</p>
-                <Button className="mt-4 gap-2" onClick={() => router.push('/calculator')}>
+                <Button className="mt-4 gap-2 bg-[#1a1a1a] hover:bg-[#333] text-white font-bold" onClick={() => router.push('/calculator')}>
                   <Plus className="w-4 h-4" /> Новий розрахунок
                 </Button>
               </div>

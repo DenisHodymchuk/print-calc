@@ -4,7 +4,7 @@ import { CalculatorClient } from './calculator-client'
 export default function CalculatorPage() {
   return (
     <>
-      <Header title="Калькулятор друку" />
+      <Header title="Розрахунок" accent="вартості друку" subtitle="Оберіть матеріал, введіть параметри — отримайте точну ціну" />
       <CalculatorClient />
     </>
   )

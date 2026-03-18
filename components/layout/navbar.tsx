@@ -1,0 +1,90 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { signOut } from 'next-auth/react'
+import { cn } from '@/lib/utils'
+import { Calculator, Layers, Printer, History, Settings, LogOut, LayoutDashboard } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { useSession } from 'next-auth/react'
+
+const navItems = [
+  { href: '/dashboard', label: 'Дашборд', icon: LayoutDashboard },
+  { href: '/calculator', label: 'Калькулятор', icon: Calculator },
+  { href: '/calculations', label: 'Розрахунки', icon: History },
+  { href: '/materials', label: 'Матеріали', icon: Layers },
+  { href: '/printers', label: 'Принтери', icon: Printer },
+]
+
+export function Navbar() {
+  const pathname = usePathname()
+  const { data: session } = useSession()
+  const name = session?.user?.name || session?.user?.email || '?'
+  const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+
+  return (
+    <header className="sticky top-0 z-50 bg-[#1a1a1a] text-white">
+      <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+        {/* Logo */}
+        <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
+          <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
+            <Printer className="w-4 h-4 text-white" />
+          </div>
+          <span className="font-bold text-sm tracking-wide">
+            3D Print <span className="text-primary">UA</span>
+          </span>
+        </Link>
+
+        {/* Nav links */}
+        <nav className="hidden md:flex items-center gap-1">
+          {navItems.map(({ href, label, icon: Icon }) => {
+            const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  'flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors',
+                  active
+                    ? 'bg-primary text-white'
+                    : 'text-white/60 hover:text-white hover:bg-white/10'
+                )}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* User menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="gap-2 text-white hover:bg-white/10 hover:text-white h-9 px-3">
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className="text-xs bg-primary text-white">{initials}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm hidden sm:block">{session?.user?.name || session?.user?.email}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem asChild>
+              <Link href="/settings" className="flex items-center gap-2">
+                <Settings className="w-4 h-4" /> Налаштування
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive gap-2"
+              onClick={() => signOut({ callbackUrl: '/login' })}
+            >
+              <LogOut className="w-4 h-4" /> Вийти
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </header>
+  )
+}
