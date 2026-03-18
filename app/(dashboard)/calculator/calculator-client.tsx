@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -13,9 +13,62 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recha
 import { Plus, Trash2, Save, ChevronDown, ChevronUp } from 'lucide-react'
 import { calculateCosts, calculateSellingPrice } from '@/lib/cost-calculator'
 
-type Material = { id: string; name: string; brand: string | null; type: string; colorHex: string | null; pricePerKg: number; density: number; failureRate: number }
+type Material = { id: string; name: string; brand: string | null; type: string; color: string | null; colorHex: string | null; pricePerKg: number; density: number; failureRate: number }
 type Printer = { id: string; name: string; brand: string | null; purchasePrice: number; powerWatts: number; lifetimeHours: number; maintenanceReservePerHour: number }
 type PostStep = { name: string; timeMinutes: number; materialCost: number }
+
+function MaterialSelect({ materials, value, onChange }: { materials: Material[]; value: string; onChange: (id: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const selected = materials.find(m => m.id === value)
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm text-left flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
+      >
+        {selected ? (
+          <>
+            <span className="w-4 h-4 rounded-full flex-shrink-0 border" style={{ backgroundColor: selected.colorHex || '#ccc' }} />
+            <span className="truncate">{selected.name}</span>
+            {selected.color && <span className="text-muted-foreground text-xs flex-shrink-0">{selected.color}</span>}
+          </>
+        ) : (
+          <span className="text-muted-foreground">Оберіть пластик</span>
+        )}
+        <svg className="ml-auto w-4 h-4 text-muted-foreground flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-lg border border-input bg-white shadow-lg max-h-56 overflow-y-auto">
+          {materials.length === 0 ? (
+            <div className="px-3 py-2 text-sm text-muted-foreground">Немає пластиків</div>
+          ) : materials.map(m => (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => { onChange(m.id); setOpen(false) }}
+              className={`w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-accent ${m.id === value ? 'bg-accent' : ''}`}
+            >
+              <span className="w-4 h-4 rounded-full flex-shrink-0 border" style={{ backgroundColor: m.colorHex || '#ccc' }} />
+              <span className="truncate font-medium">{m.name}</span>
+              {m.color && <span className="text-muted-foreground text-xs flex-shrink-0 ml-auto">{m.color}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const COLORS = ['#6366f1', '#f59e0b', '#10b981', '#8b5cf6']
 
@@ -147,7 +200,7 @@ export function CalculatorClient() {
                     onChange={e => setForm(p => ({ ...p, printerId: e.target.value }))}
                     className="w-full h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
                   >
-                    <option value="">Оберіть принтер</option>
+                    <option value="" disabled>Оберіть принтер</option>
                     {printers.map(p => (
                       <option key={p.id} value={p.id}>{p.brand ? `${p.brand} ${p.name}` : p.name}</option>
                     ))}
@@ -155,16 +208,11 @@ export function CalculatorClient() {
                 </div>
                 <div className="space-y-2">
                   <Label>Пластик</Label>
-                  <select
+                  <MaterialSelect
+                    materials={materials}
                     value={form.materialId}
-                    onChange={e => setForm(p => ({ ...p, materialId: e.target.value }))}
-                    className="w-full h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
-                  >
-                    <option value="">Оберіть пластик</option>
-                    {materials.map(m => (
-                      <option key={m.id} value={m.id}>{m.name} ({m.type}) — {m.pricePerKg} ₴/кг</option>
-                    ))}
-                  </select>
+                    onChange={v => setForm(p => ({ ...p, materialId: v }))}
+                  />
                 </div>
               </div>
             </CardContent>

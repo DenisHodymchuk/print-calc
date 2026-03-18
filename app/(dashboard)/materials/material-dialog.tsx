@@ -5,7 +5,6 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import type { Material } from './materials-client'
 
@@ -23,7 +22,7 @@ interface Props {
 }
 
 const EMPTY = {
-  name: '', brand: '', color: '', colorHex: '#ffffff',
+  brand: '', color: '', colorHex: '#ffffff',
   type: 'PLA', pricePerKg: '', density: '1.24', failureRate: '5', notes: '',
 }
 
@@ -34,7 +33,6 @@ export function MaterialDialog({ open, onOpenChange, material, onSaved }: Props)
   useEffect(() => {
     if (material) {
       setForm({
-        name: material.name,
         brand: material.brand || '',
         color: material.color || '',
         colorHex: material.colorHex || '#ffffff',
@@ -49,8 +47,13 @@ export function MaterialDialog({ open, onOpenChange, material, onSaved }: Props)
     }
   }, [material, open])
 
-  function handle(e: React.ChangeEvent<HTMLInputElement>) {
+  function handle(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  function buildName() {
+    const parts = [form.brand, TYPE_LABELS[form.type] || form.type, form.color].filter(Boolean)
+    return parts.join(' ')
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -58,10 +61,15 @@ export function MaterialDialog({ open, onOpenChange, material, onSaved }: Props)
     setLoading(true)
 
     const payload = {
-      ...form,
+      name: buildName() || TYPE_LABELS[form.type] || form.type,
+      brand: form.brand,
+      color: form.color,
+      colorHex: form.colorHex,
+      type: form.type,
       pricePerKg: parseFloat(form.pricePerKg),
       density: parseFloat(form.density),
       failureRate: parseFloat(form.failureRate) / 100,
+      notes: form.notes,
     }
 
     const url = material ? `/api/materials/${material.id}` : '/api/materials'
@@ -76,7 +84,7 @@ export function MaterialDialog({ open, onOpenChange, material, onSaved }: Props)
     setLoading(false)
 
     if (res.ok) {
-      toast.success(material ? 'Матеріал оновлено' : 'Матеріал додано')
+      toast.success(material ? 'Філамент оновлено' : 'Філамент додано')
       onSaved()
       onOpenChange(false)
     } else {
@@ -89,35 +97,34 @@ export function MaterialDialog({ open, onOpenChange, material, onSaved }: Props)
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{material ? 'Редагувати матеріал' : 'Додати матеріал'}</DialogTitle>
+          <DialogTitle>{material ? 'Редагувати філамент' : 'Додати філамент'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="name">Назва *</Label>
-              <Input id="name" name="name" value={form.name} onChange={handle} required placeholder="PLA Basic White" />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="brand">Бренд</Label>
               <Input id="brand" name="brand" value={form.brand} onChange={handle} placeholder="Bambu Lab" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="type">Тип</Label>
-              <Select value={form.type} onValueChange={(v) => setForm((p) => ({ ...p, type: v ?? 'PLA' }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {MATERIAL_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>{TYPE_LABELS[t]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select
+                id="type"
+                name="type"
+                value={form.type}
+                onChange={handle}
+                className="w-full h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
+              >
+                {MATERIAL_TYPES.map((t) => (
+                  <option key={t} value={t}>{TYPE_LABELS[t]}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="color">Колір (назва)</Label>
               <Input id="color" name="color" value={form.color} onChange={handle} placeholder="Білий" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="colorHex">Колір (HEX)</Label>
+              <Label htmlFor="colorHex">Колір (візуально)</Label>
               <div className="flex gap-2">
                 <Input
                   id="colorHex"

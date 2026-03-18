@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { MaterialDialog } from './material-dialog'
 
 export type Material = {
@@ -95,20 +94,19 @@ export function MaterialsClient() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Select value={filterType} onValueChange={(v) => setFilterType(v ?? 'all')}>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Тип" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Всі типи</SelectItem>
-              {MATERIAL_TYPES.map((t) => (
-                <SelectItem key={t} value={t}>{TYPE_LABELS[t]}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select
+            value={filterType}
+            onChange={e => setFilterType(e.target.value)}
+            className="h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
+          >
+            <option value="all">Всі типи</option>
+            {MATERIAL_TYPES.map(t => (
+              <option key={t} value={t}>{TYPE_LABELS[t]}</option>
+            ))}
+          </select>
         </div>
         <Button onClick={handleAdd} className="gap-2">
-          <Plus className="w-4 h-4" /> Додати матеріал
+          <Plus className="w-4 h-4" /> Додати філамент
         </Button>
       </div>
 
@@ -117,8 +115,8 @@ export function MaterialsClient() {
         <p className="text-muted-foreground">Завантаження...</p>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
-          <p className="text-lg mb-2">Матеріалів не знайдено</p>
-          <p className="text-sm">Додайте перший матеріал за допомогою кнопки вище</p>
+          <p className="text-lg mb-2">Філаментів не знайдено</p>
+          <p className="text-sm">Додайте перший філамент за допомогою кнопки вище</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

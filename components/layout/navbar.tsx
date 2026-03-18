@@ -13,7 +13,7 @@ const navItems = [
   { href: '/dashboard', label: 'Дашборд', icon: LayoutDashboard },
   { href: '/calculator', label: 'Калькулятор', icon: Calculator },
   { href: '/calculations', label: 'Розрахунки', icon: History },
-  { href: '/materials', label: 'Матеріали', icon: Layers },
+  { href: '/materials', label: 'Філамент', icon: Layers },
   { href: '/printers', label: 'Принтери', icon: Printer },
 ]
 
