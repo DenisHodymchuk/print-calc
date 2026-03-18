@@ -17,6 +17,53 @@ type Material = { id: string; name: string; brand: string | null; type: string; 
 type Printer = { id: string; name: string; brand: string | null; purchasePrice: number; powerWatts: number; lifetimeHours: number; maintenanceReservePerHour: number }
 type PostStep = { name: string; timeMinutes: number; materialCost: number }
 
+function PrinterSelect({ printers, value, onChange }: { printers: Printer[]; value: string; onChange: (id: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const selected = printers.find(p => p.id === value)
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm text-left flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
+      >
+        {selected ? (
+          <span className="truncate">{selected.name}</span>
+        ) : (
+          <span className="text-muted-foreground">Оберіть принтер</span>
+        )}
+        <svg className="ml-auto w-4 h-4 text-muted-foreground flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-lg border border-input bg-white shadow-lg max-h-56 overflow-y-auto">
+          {printers.length === 0 ? (
+            <div className="px-3 py-2 text-sm text-muted-foreground">Немає принтерів</div>
+          ) : printers.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => { onChange(p.id); setOpen(false) }}
+              className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${p.id === value ? 'bg-accent' : ''}`}
+            >
+              {p.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function MaterialSelect({ materials, value, onChange }: { materials: Material[]; value: string; onChange: (id: string) => void }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -143,7 +190,7 @@ export function CalculatorClient() {
   const chartData = [
     { name: 'Матеріал', value: parseFloat(costs.materialCost.toFixed(2)) },
     { name: 'Машина', value: parseFloat(costs.machineCost.toFixed(2)) },
-    { name: 'Праця', value: parseFloat(costs.laborCost.toFixed(2)) },
+    { name: 'Підготовка', value: parseFloat(costs.laborCost.toFixed(2)) },
     { name: 'Накладні', value: parseFloat(costs.overheadCost.toFixed(2)) },
   ].filter(d => d.value > 0)
 
@@ -195,16 +242,11 @@ export function CalculatorClient() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Принтер</Label>
-                  <select
+                  <PrinterSelect
+                    printers={printers}
                     value={form.printerId}
-                    onChange={e => setForm(p => ({ ...p, printerId: e.target.value }))}
-                    className="w-full h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
-                  >
-                    <option value="" disabled hidden>Оберіть принтер</option>
-                    {printers.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
+                    onChange={v => setForm(p => ({ ...p, printerId: v }))}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Пластик</Label>
@@ -260,14 +302,18 @@ export function CalculatorClient() {
                   </div>
                   <div className="space-y-2">
                     <Label>Підтримки</Label>
-                    <select
-                      value={form.hasSupports ? 'yes' : 'no'}
-                      onChange={e => setForm(p => ({ ...p, hasSupports: e.target.value === 'yes' }))}
-                      className="w-full h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
-                    >
-                      <option value="no">Без підтримок</option>
-                      <option value="yes">З підтримками</option>
-                    </select>
+                    <div className="flex rounded-lg border border-input overflow-hidden h-9">
+                      <button
+                        type="button"
+                        onClick={() => setForm(p => ({ ...p, hasSupports: false }))}
+                        className={`flex-1 text-sm transition-colors ${!form.hasSupports ? 'bg-primary text-white' : 'bg-transparent text-foreground hover:bg-accent'}`}
+                      >Без підтримок</button>
+                      <button
+                        type="button"
+                        onClick={() => setForm(p => ({ ...p, hasSupports: true }))}
+                        className={`flex-1 text-sm border-l border-input transition-colors ${form.hasSupports ? 'bg-primary text-white' : 'bg-transparent text-foreground hover:bg-accent'}`}
+                      >З підтримками</button>
+                    </div>
                   </div>
                   {form.hasSupports && (
                     <div className="space-y-2">
@@ -347,13 +393,15 @@ export function CalculatorClient() {
                 </div>
               </div>
               <Separator />
-              <div className="space-y-2">
-                <Label>Ім&apos;я клієнта</Label>
-                <Input name="clientName" value={form.clientName} onChange={handleChange} placeholder="Іван Іваненко" />
-              </div>
-              <div className="space-y-2">
-                <Label>Нотатки</Label>
-                <Input name="notes" value={form.notes} onChange={handleChange} placeholder="Додаткова інформація для кошторису..." />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Ім&apos;я клієнта</Label>
+                  <Input name="clientName" value={form.clientName} onChange={handleChange} placeholder="Іван Іваненко" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Нотатки</Label>
+                  <Input name="notes" value={form.notes} onChange={handleChange} placeholder="Додаткова інформація..." />
+                </div>
               </div>
             </CardContent>
           </Card>

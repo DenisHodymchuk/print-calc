@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Plus, Search, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -27,6 +27,51 @@ const MATERIAL_TYPES = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'NYLON', 'RESIN', 'O
 const TYPE_LABELS: Record<string, string> = {
   PLA: 'PLA', PETG: 'PETG', ABS: 'ABS', ASA: 'ASA',
   TPU: 'TPU', NYLON: 'Нейлон', RESIN: 'Смола', OTHER: 'Інше',
+}
+
+function TypeFilterDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  const label = value === 'all' ? 'Всі типи' : TYPE_LABELS[value] ?? value
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm flex items-center gap-2 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/50"
+      >
+        {label}
+        <svg className="w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 min-w-[120px] rounded-lg border border-input bg-white shadow-lg overflow-hidden">
+          <button
+            type="button"
+            onClick={() => { onChange('all'); setOpen(false) }}
+            className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${value === 'all' ? 'bg-accent font-medium' : ''}`}
+          >Всі типи</button>
+          {MATERIAL_TYPES.map(t => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => { onChange(t); setOpen(false) }}
+              className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${value === t ? 'bg-accent font-medium' : ''}`}
+            >{TYPE_LABELS[t]}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function MaterialsClient() {
@@ -94,16 +139,7 @@ export function MaterialsClient() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <select
-            value={filterType}
-            onChange={e => setFilterType(e.target.value)}
-            className="h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
-          >
-            <option value="all">Всі типи</option>
-            {MATERIAL_TYPES.map(t => (
-              <option key={t} value={t}>{TYPE_LABELS[t]}</option>
-            ))}
-          </select>
+          <TypeFilterDropdown value={filterType} onChange={setFilterType} />
         </div>
         <Button onClick={handleAdd} className="gap-2">
           <Plus className="w-4 h-4" /> Додати філамент

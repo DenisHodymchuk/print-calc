@@ -6,7 +6,6 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
 import { PrinterDialog } from './printer-dialog'
 
 export type Printer = {
@@ -87,7 +86,6 @@ export function PrintersClient() {
           {printers.map((p) => {
             const costPerHour = calcCostPerHour(p)
             const roiHours = calcRoiHours(p)
-            const roiProgressMax = roiHours * 2
             return (
               <Card key={p.id} className="group hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
@@ -137,15 +135,14 @@ export function PrintersClient() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Окупність принтера</span>
-                      <span>{roiHours.toLocaleString()} год друку</span>
-                    </div>
-                    <Progress value={Math.min((roiHours / roiProgressMax) * 100, 100)} className="h-2" />
+                  <div className="space-y-2 pt-1 border-t border-border">
                     <div className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">Куплено за</span>
+                      <span className="text-muted-foreground">Ціна принтера</span>
                       <Badge variant="outline">{p.purchasePrice.toLocaleString()} ₴</Badge>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Годин друку до окупності</span>
+                      <span className="font-medium text-foreground">{roiHours.toLocaleString()} год</span>
                     </div>
                   </div>
                 </CardContent>

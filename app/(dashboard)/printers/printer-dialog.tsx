@@ -16,7 +16,7 @@ interface Props {
 }
 
 const EMPTY = {
-  name: '', brand: '', purchasePrice: '', powerWatts: '',
+  brand: '', model: '', purchasePrice: '', powerWatts: '',
   lifetimeHours: '2000', maintenanceReservePerHour: '0', notes: '',
 }
 
@@ -26,9 +26,13 @@ export function PrinterDialog({ open, onOpenChange, printer, onSaved }: Props) {
 
   useEffect(() => {
     if (printer) {
+      const brand = printer.brand || ''
+      const model = brand && printer.name.startsWith(brand)
+        ? printer.name.slice(brand.length).trim()
+        : printer.name
       setForm({
-        name: printer.name,
-        brand: printer.brand || '',
+        brand,
+        model,
         purchasePrice: String(printer.purchasePrice),
         powerWatts: String(printer.powerWatts),
         lifetimeHours: String(printer.lifetimeHours),
@@ -46,7 +50,10 @@ export function PrinterDialog({ open, onOpenChange, printer, onSaved }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!form.model) { toast.error('Введіть модель принтера'); return }
     setLoading(true)
+
+    const name = [form.brand, form.model].filter(Boolean).join(' ')
 
     const url = printer ? `/api/printers/${printer.id}` : '/api/printers'
     const method = printer ? 'PATCH' : 'POST'
@@ -54,7 +61,7 @@ export function PrinterDialog({ open, onOpenChange, printer, onSaved }: Props) {
     const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, name }),
     })
 
     setLoading(false)
@@ -87,13 +94,13 @@ export function PrinterDialog({ open, onOpenChange, printer, onSaved }: Props) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="name">Назва *</Label>
-              <Input id="name" name="name" value={form.name} onChange={handle} required placeholder="Bambu Lab X1C" />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="brand">Бренд</Label>
               <Input id="brand" name="brand" value={form.brand} onChange={handle} placeholder="Bambu Lab" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="model">Модель *</Label>
+              <Input id="model" name="model" value={form.model} onChange={handle} required placeholder="A1" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="purchasePrice">Ціна купівлі (₴) *</Label>
@@ -107,8 +114,8 @@ export function PrinterDialog({ open, onOpenChange, printer, onSaved }: Props) {
               <Label htmlFor="lifetimeHours">Ресурс (год)</Label>
               <Input id="lifetimeHours" name="lifetimeHours" type="number" min="100" value={form.lifetimeHours} onChange={handle} placeholder="2000" />
             </div>
-            <div className="col-span-2 space-y-2">
-              <Label htmlFor="maintenanceReservePerHour">Резерв на обслуговування (₴/год)</Label>
+            <div className="space-y-2">
+              <Label htmlFor="maintenanceReservePerHour">Обслуговування (₴/год)</Label>
               <Input id="maintenanceReservePerHour" name="maintenanceReservePerHour" type="number" min="0" step="0.01" value={form.maintenanceReservePerHour} onChange={handle} placeholder="0.5" />
             </div>
             <div className="col-span-2 space-y-2">
