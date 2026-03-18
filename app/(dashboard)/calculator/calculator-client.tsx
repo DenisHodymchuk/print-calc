@@ -19,6 +19,7 @@ type PostStep = { name: string; timeMinutes: number; materialCost: number }
 
 function useDropdownPos(open: boolean) {
   const btnRef = useRef<HTMLButtonElement>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
   useEffect(() => {
     if (open && btnRef.current) {
@@ -26,22 +27,24 @@ function useDropdownPos(open: boolean) {
       setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX, width: r.width })
     }
   }, [open])
-  return { btnRef, pos }
+  return { btnRef, popupRef, pos }
 }
 
 function PrinterSelect({ printers, value, onChange }: { printers: Printer[]; value: string; onChange: (id: string) => void }) {
   const [open, setOpen] = useState(false)
-  const { btnRef, pos } = useDropdownPos(open)
+  const { btnRef, popupRef, pos } = useDropdownPos(open)
   const selected = printers.find(p => p.id === value)
 
   useEffect(() => {
     if (!open) return
     function handle(e: MouseEvent) {
-      if (btnRef.current && !btnRef.current.contains(e.target as Node)) setOpen(false)
+      const t = e.target as Node
+      if (btnRef.current?.contains(t) || popupRef.current?.contains(t)) return
+      setOpen(false)
     }
     document.addEventListener('mousedown', handle)
     return () => document.removeEventListener('mousedown', handle)
-  }, [open, btnRef])
+  }, [open, btnRef, popupRef])
 
   return (
     <div className="relative">
@@ -56,6 +59,7 @@ function PrinterSelect({ printers, value, onChange }: { printers: Printer[]; val
       </button>
       {open && (
         <div
+          ref={popupRef}
           className="fixed z-[200] rounded-lg border border-input bg-white shadow-lg max-h-56 overflow-y-auto"
           style={{ top: pos.top, left: pos.left, width: pos.width }}
         >
@@ -75,17 +79,19 @@ function PrinterSelect({ printers, value, onChange }: { printers: Printer[]; val
 
 function MaterialSelect({ materials, value, onChange }: { materials: Material[]; value: string; onChange: (id: string) => void }) {
   const [open, setOpen] = useState(false)
-  const { btnRef, pos } = useDropdownPos(open)
+  const { btnRef, popupRef, pos } = useDropdownPos(open)
   const selected = materials.find(m => m.id === value)
 
   useEffect(() => {
     if (!open) return
     function handle(e: MouseEvent) {
-      if (btnRef.current && !btnRef.current.contains(e.target as Node)) setOpen(false)
+      const t = e.target as Node
+      if (btnRef.current?.contains(t) || popupRef.current?.contains(t)) return
+      setOpen(false)
     }
     document.addEventListener('mousedown', handle)
     return () => document.removeEventListener('mousedown', handle)
-  }, [open, btnRef])
+  }, [open, btnRef, popupRef])
 
   return (
     <div className="relative">
@@ -108,6 +114,7 @@ function MaterialSelect({ materials, value, onChange }: { materials: Material[];
       </button>
       {open && (
         <div
+          ref={popupRef}
           className="fixed z-[200] rounded-lg border border-input bg-white shadow-lg max-h-56 overflow-y-auto"
           style={{ top: pos.top, left: pos.left, width: pos.width }}
         >

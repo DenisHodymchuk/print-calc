@@ -32,6 +32,7 @@ const TYPE_LABELS: Record<string, string> = {
 function TypeFilterDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false)
   const btnRef = useRef<HTMLButtonElement>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState({ top: 0, left: 0 })
 
   useEffect(() => {
@@ -44,7 +45,9 @@ function TypeFilterDropdown({ value, onChange }: { value: string; onChange: (v: 
   useEffect(() => {
     if (!open) return
     function handle(e: MouseEvent) {
-      if (btnRef.current && !btnRef.current.contains(e.target as Node)) setOpen(false)
+      const t = e.target as Node
+      if (btnRef.current?.contains(t) || popupRef.current?.contains(t)) return
+      setOpen(false)
     }
     document.addEventListener('mousedown', handle)
     return () => document.removeEventListener('mousedown', handle)
@@ -65,6 +68,7 @@ function TypeFilterDropdown({ value, onChange }: { value: string; onChange: (v: 
       </button>
       {open && (
         <div
+          ref={popupRef}
           className="fixed z-[200] min-w-[120px] rounded-lg border border-input bg-white shadow-lg overflow-hidden"
           style={{ top: pos.top, left: pos.left }}
         >
