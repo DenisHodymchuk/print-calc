@@ -98,7 +98,7 @@ export function CalculationsClient() {
               onChange={e => setSearch(e.target.value)}
             />
           </div>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v ?? 'all')}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Статус" />
             </SelectTrigger>
