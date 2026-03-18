@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { Calculator, Layers, Printer, History, Settings, LogOut, LayoutDashboard } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useSession } from 'next-auth/react'
@@ -61,19 +60,15 @@ export function Navbar() {
 
         {/* User menu */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="gap-2 text-white hover:bg-white/10 hover:text-white h-9 px-3">
-              <Avatar className="h-6 w-6">
-                <AvatarFallback className="text-xs bg-primary text-white">{initials}</AvatarFallback>
-              </Avatar>
-              <span className="text-sm hidden sm:block">{session?.user?.name || session?.user?.email}</span>
-            </Button>
+          <DropdownMenuTrigger className="flex items-center gap-2 text-white/80 hover:text-white hover:bg-white/10 h-9 px-3 rounded-md text-sm transition-colors cursor-pointer">
+            <Avatar className="h-6 w-6">
+              <AvatarFallback className="text-xs bg-primary text-white">{initials}</AvatarFallback>
+            </Avatar>
+            <span className="hidden sm:block">{session?.user?.name || session?.user?.email}</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem asChild>
-              <Link href="/settings" className="flex items-center gap-2">
-                <Settings className="w-4 h-4" /> Налаштування
-              </Link>
+            <DropdownMenuItem onClick={() => window.location.href = '/settings'} className="gap-2 cursor-pointer">
+              <Settings className="w-4 h-4" /> Налаштування
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
