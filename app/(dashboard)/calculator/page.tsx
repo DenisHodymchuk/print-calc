@@ -1,12 +1,11 @@
 import { Header } from '@/components/layout/header'
+import { CalculatorClient } from './calculator-client'
 
 export default function CalculatorPage() {
   return (
     <>
-      <Header title="Калькулятор" />
-      <div className="p-6">
-        <p className="text-muted-foreground">Тут буде калькулятор вартості друку.</p>
-      </div>
+      <Header title="Калькулятор друку" />
+      <CalculatorClient />
     </>
   )
 }
