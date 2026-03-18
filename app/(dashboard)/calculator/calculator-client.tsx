@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
@@ -143,34 +142,29 @@ export function CalculatorClient() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Принтер</Label>
-                  <Select value={form.printerId} onValueChange={v => setForm(p => ({ ...p, printerId: v ?? '' }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Оберіть принтер" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {printers.map(p => (
-                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <select
+                    value={form.printerId}
+                    onChange={e => setForm(p => ({ ...p, printerId: e.target.value }))}
+                    className="w-full h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
+                  >
+                    <option value="">Оберіть принтер</option>
+                    {printers.map(p => (
+                      <option key={p.id} value={p.id}>{p.brand ? `${p.brand} ${p.name}` : p.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Матеріал</Label>
-                  <Select value={form.materialId} onValueChange={v => setForm(p => ({ ...p, materialId: v ?? '' }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Оберіть матеріал" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {materials.map(m => (
-                        <SelectItem key={m.id} value={m.id}>
-                          <span className="flex items-center gap-2">
-                            {m.colorHex && <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: m.colorHex }} />}
-                            {m.name} — {m.pricePerKg} ₴/кг
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label>Пластик</Label>
+                  <select
+                    value={form.materialId}
+                    onChange={e => setForm(p => ({ ...p, materialId: e.target.value }))}
+                    className="w-full h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
+                  >
+                    <option value="">Оберіть пластик</option>
+                    {materials.map(m => (
+                      <option key={m.id} value={m.id}>{m.name} ({m.type}) — {m.pricePerKg} ₴/кг</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </CardContent>
@@ -218,13 +212,14 @@ export function CalculatorClient() {
                   </div>
                   <div className="space-y-2">
                     <Label>Підтримки</Label>
-                    <Select value={form.hasSupports ? 'yes' : 'no'} onValueChange={v => setForm(p => ({ ...p, hasSupports: v === 'yes' }))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="no">Без підтримок</SelectItem>
-                        <SelectItem value="yes">З підтримками</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <select
+                      value={form.hasSupports ? 'yes' : 'no'}
+                      onChange={e => setForm(p => ({ ...p, hasSupports: e.target.value === 'yes' }))}
+                      className="w-full h-9 rounded-lg border border-input bg-transparent px-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring"
+                    >
+                      <option value="no">Без підтримок</option>
+                      <option value="yes">З підтримками</option>
+                    </select>
                   </div>
                   {form.hasSupports && (
                     <div className="space-y-2">
@@ -239,7 +234,7 @@ export function CalculatorClient() {
 
           {/* Labor */}
           <Card>
-            <CardHeader><CardTitle className="text-base">Праця та постобробка</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Підготовка та постобробка</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -304,15 +299,9 @@ export function CalculatorClient() {
                 </div>
               </div>
               <Separator />
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Ім&apos;я клієнта</Label>
-                  <Input name="clientName" value={form.clientName} onChange={handleChange} placeholder="Іван Іваненко" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Email клієнта</Label>
-                  <Input name="clientEmail" type="email" value={form.clientEmail} onChange={handleChange} placeholder="client@example.com" />
-                </div>
+              <div className="space-y-2">
+                <Label>Ім&apos;я клієнта</Label>
+                <Input name="clientName" value={form.clientName} onChange={handleChange} placeholder="Іван Іваненко" />
               </div>
               <div className="space-y-2">
                 <Label>Нотатки</Label>
