@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, Trash2, FolderOpen, ChevronDown, Tag, Pencil, X, ImagePlus, Save, Package, ArrowLeft, Clock, Printer as PrinterIcon, Calculator } from 'lucide-react'
+import { Search, Plus, Trash2, FolderOpen, ChevronDown, Tag, Pencil, X, ImagePlus, Save, Package, ArrowLeft, Calculator } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -252,45 +252,54 @@ function ModelDetailView({ modelId, onBack }: { modelId: string; onBack: () => v
           <p className="text-sm">Додайте розрахунок до цієї моделі з калькулятора або розрахунків</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {model.calculations.map(v => (
-            <Card key={v.id} className="hover:shadow-sm transition-shadow">
-              <CardContent className="px-3 py-2.5 space-y-1.5">
-                {/* Row 1: material, printer, actions */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {v.material?.colorHex && (
-                      <div className="w-5 h-5 rounded-full border flex-shrink-0" style={{ backgroundColor: v.material.colorHex }} />
-                    )}
-                    {v.material && <span className="font-medium text-xs">{v.material.name}</span>}
-                    {v.printer && <span className="text-[11px] text-muted-foreground">· {v.printer.name}</span>}
-                  </div>
-                  <div className="flex items-center gap-0.5">
-                    <Button size="icon" variant="ghost" className="h-6 w-6" title="Новий розрахунок" onClick={() => router.push(`/calculator?from=${v.id}&modelId=${model.id}`)}>
-                      <Plus className="w-3 h-3" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-6 w-6" title="Редагувати" onClick={() => router.push(`/calculator?edit=${v.id}`)}>
-                      <Pencil className="w-3 h-3" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 hover:text-destructive" title="Відв'язати" onClick={() => handleUnlink(v.id)}>
-                      <X className="w-3 h-3" />
-                    </Button>
+            <Card key={v.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-4 space-y-3">
+                {/* Header: material + printer */}
+                <div className="flex items-center gap-2">
+                  {v.material?.colorHex && (
+                    <div className="w-6 h-6 rounded-full border flex-shrink-0" style={{ backgroundColor: v.material.colorHex }} />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    {v.material && <p className="font-medium text-sm truncate">{v.material.name}</p>}
+                    {v.printer && <p className="text-xs text-muted-foreground">{v.printer.name}</p>}
                   </div>
                 </div>
 
-                {/* Row 2: all details inline */}
-                <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
-                  <span>{v.weightGrams}г</span>
-                  <span>{formatTime(v.printTimeMinutes)}</span>
-                  <span>{v.layerHeight}мм</span>
-                  <span>{v.infillPercent}%</span>
-                  {v.hasSupports && <span>підтр.</span>}
-                  <span className="text-foreground">мат: {v.materialCost.toFixed(1)}₴</span>
-                  <span className="text-foreground">ам: {v.machineCost.toFixed(1)}₴</span>
-                  <span className="text-foreground">підг: {v.laborCost.toFixed(1)}₴</span>
-                  <span className="text-foreground">накл: {v.overheadCost.toFixed(1)}₴</span>
-                  <span className="ml-auto text-foreground font-medium">собів: {v.totalCost.toFixed(0)}₴</span>
-                  <span className="font-bold text-sm text-foreground">{v.sellingPrice.toFixed(0)} ₴</span>
+                {/* Parameters */}
+                <div className="grid grid-cols-4 gap-2 text-xs">
+                  <div><p className="text-muted-foreground">Вага</p><p className="font-medium">{v.weightGrams}г</p></div>
+                  <div><p className="text-muted-foreground">Час</p><p className="font-medium">{formatTime(v.printTimeMinutes)}</p></div>
+                  <div><p className="text-muted-foreground">Шар</p><p className="font-medium">{v.layerHeight}мм</p></div>
+                  <div><p className="text-muted-foreground">Заповн.</p><p className="font-medium">{v.infillPercent}%</p></div>
+                </div>
+
+                {/* Costs */}
+                <div className="grid grid-cols-4 gap-2 text-xs">
+                  <div><p className="text-muted-foreground">Матеріал</p><p className="font-medium">{v.materialCost.toFixed(1)} ₴</p></div>
+                  <div><p className="text-muted-foreground">Аморт.</p><p className="font-medium">{v.machineCost.toFixed(1)} ₴</p></div>
+                  <div><p className="text-muted-foreground">Підгот.</p><p className="font-medium">{v.laborCost.toFixed(1)} ₴</p></div>
+                  <div><p className="text-muted-foreground">Наклад.</p><p className="font-medium">{v.overheadCost.toFixed(1)} ₴</p></div>
+                </div>
+
+                {/* Price + actions */}
+                <div className="flex items-center justify-between pt-2 border-t border-border">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Собівартість: {v.totalCost.toFixed(0)} ₴ · маржа {v.marginPercent}%</p>
+                    <p className="font-bold text-lg">{v.sellingPrice.toFixed(0)} ₴</p>
+                  </div>
+                  <div className="flex gap-0.5">
+                    <Button size="icon" variant="ghost" className="h-7 w-7" title="Новий розрахунок" onClick={() => router.push(`/calculator?from=${v.id}&modelId=${model.id}`)}>
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" title="Редагувати" onClick={() => router.push(`/calculator?edit=${v.id}`)}>
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7 hover:text-destructive" title="Відв'язати" onClick={() => handleUnlink(v.id)}>
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -382,28 +391,28 @@ export function LibraryClient() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {models.map(m => (
-            <Card key={m.id} className="group hover:shadow-sm transition-shadow cursor-pointer" onClick={() => setSelectedModelId(m.id)}>
-              <CardContent className="p-2.5 flex items-center gap-3">
+            <Card key={m.id} className="group hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedModelId(m.id)}>
+              <CardContent className="p-3 flex items-center gap-3">
                 {m.photoUrl ? (
-                  <img src={m.photoUrl} alt={m.name} className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
+                  <img src={m.photoUrl} alt={m.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
                 ) : (
-                  <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                    <Package className="w-6 h-6 text-muted-foreground/30" />
+                  <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+                    <Package className="w-7 h-7 text-muted-foreground/30" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{m.name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">{m.category}</Badge>
-                    <span className="text-[11px] text-muted-foreground">{m._count.calculations} вар.</span>
+                  <p className="font-semibold truncate">{m.name}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="text-xs">{m.category}</Badge>
+                    <span className="text-xs text-muted-foreground">{m._count.calculations} вар.</span>
                   </div>
                 </div>
                 <div className="flex gap-0.5 flex-shrink-0" onClick={e => e.stopPropagation()}>
-                  <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => { setEditModel(m); setShowForm(true) }}>
-                    <Pencil className="w-3 h-3" />
+                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditModel(m); setShowForm(true) }}>
+                    <Pencil className="w-3.5 h-3.5" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-6 w-6 hover:text-destructive" onClick={() => handleDelete(m.id)}>
-                    <Trash2 className="w-3 h-3" />
+                  <Button size="icon" variant="ghost" className="h-7 w-7 hover:text-destructive" onClick={() => handleDelete(m.id)}>
+                    <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               </CardContent>
