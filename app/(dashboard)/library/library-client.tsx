@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, Trash2, FolderOpen, ChevronDown, Tag, Pencil, X, ImagePlus, Save } from 'lucide-react'
+import { Search, Plus, Trash2, FolderOpen, ChevronDown, Tag, Pencil, X, ImagePlus, Save, Package } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Printer, Clock, Package } from 'lucide-react'
+import { Printer, Clock } from 'lucide-react'
 
 type Template = {
   id: string
@@ -285,66 +285,61 @@ export function LibraryClient() {
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {templates.map(t => (
             <Card key={t.id} className="group hover:shadow-md transition-shadow overflow-hidden">
-              <CardContent className="p-0">
-                <div className="flex">
-                  {/* Photo on left */}
-                  {t.photoUrl ? (
-                    <div className="w-44 flex-shrink-0">
-                      <img src={t.photoUrl} alt={t.name} className="w-full h-full object-cover min-h-[140px]" />
-                    </div>
-                  ) : (
-                    <div className="w-44 flex-shrink-0 flex items-center justify-center min-h-[140px]" style={{ backgroundColor: t.material?.colorHex || '#e5e5e0' }}>
-                      <Package className="w-10 h-10 text-white/60" />
-                    </div>
+              {/* Photo */}
+              {t.photoUrl ? (
+                <div className="h-44 overflow-hidden">
+                  <img src={t.photoUrl} alt={t.name} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="h-44 flex items-center justify-center" style={{ backgroundColor: t.material?.colorHex || '#e5e5e0' }}>
+                  <Package className="w-12 h-12 text-white/50" />
+                </div>
+              )}
+
+              <CardContent className="p-4 space-y-2">
+                {/* Title row with category */}
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-bold text-base leading-tight">{t.name}</p>
+                  {t.category && <Badge variant="outline" className="text-xs flex-shrink-0">{t.category}</Badge>}
+                </div>
+
+                {/* Material */}
+                {t.material && (
+                  <p className="text-xs text-muted-foreground">{t.material.name}</p>
+                )}
+
+                {/* Details row */}
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  {t.printer && (
+                    <span className="flex items-center gap-1">
+                      <Printer className="w-3 h-3" /> {t.printer.name}
+                    </span>
                   )}
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> {formatTime(t.printTimeMinutes)}
+                  </span>
+                  <span>{t.weightGrams}г</span>
+                </div>
 
-                  {/* Content */}
-                  <div className="flex-1 p-4 flex flex-col justify-between gap-3">
-                    <div>
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="font-bold text-lg">{t.name}</p>
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
-                            {t.category && <Badge variant="outline" className="text-xs">{t.category}</Badge>}
-                            {t.material && <span className="text-xs text-muted-foreground">{t.material.name}</span>}
-                          </div>
-                        </div>
-                        <div className="flex gap-1 flex-shrink-0">
-                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Редагувати" onClick={() => setEditTemplate(t)}>
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-destructive" title="Видалити" onClick={() => handleRemove(t.id)}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground flex-wrap">
-                        {t.printer && (
-                          <span className="flex items-center gap-1">
-                            <Printer className="w-3.5 h-3.5" /> {t.printer.name}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" /> {formatTime(t.printTimeMinutes)}
-                        </span>
-                        <span>{t.weightGrams}г</span>
-                        {t.notes && <span className="text-xs italic">{t.notes}</span>}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <span className="text-lg font-bold">{t.sellingPrice.toFixed(0)} ₴</span>
-                        <span className="text-xs text-muted-foreground ml-2">собівартість: {t.totalCost.toFixed(0)} ₴</span>
-                      </div>
-                      <Button size="sm" className="gap-1.5" onClick={() => router.push(`/calculator?from=${t.id}`)}>
-                        <Plus className="w-3.5 h-3.5" /> Новий розрахунок
-                      </Button>
-                    </div>
+                {/* Price + actions */}
+                <div className="flex items-center justify-between pt-1">
+                  <div>
+                    <span className="font-bold text-base">{t.sellingPrice.toFixed(0)} ₴</span>
+                    <span className="text-xs text-muted-foreground ml-1.5">собівартість: {t.totalCost.toFixed(0)} ₴</span>
+                  </div>
+                  <div className="flex gap-0.5">
+                    <Button size="icon" variant="ghost" className="h-7 w-7" title="Редагувати" onClick={() => setEditTemplate(t)}>
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" title="Новий розрахунок" onClick={() => router.push(`/calculator?from=${t.id}`)}>
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7 hover:text-destructive" title="Видалити" onClick={() => handleRemove(t.id)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
                 </div>
               </CardContent>
