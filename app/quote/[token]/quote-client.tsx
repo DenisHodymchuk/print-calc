@@ -98,9 +98,6 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
               {[
                 { icon: Clock, label: 'Час друку', value: formatTime(quote.printTimeMinutes) },
                 { icon: Package, label: 'Вага', value: `${quote.weightGrams} г` },
-                ...((quote.amsMaterials && quote.amsMaterials.length > 0)
-                  ? [{ icon: Layers, label: 'Пластик (AMS)', value: quote.amsMaterials.map(a => a.name).filter(Boolean).join(', ') || `${quote.amsMaterials.length} матеріал(ів)` }]
-                  : (quote.material ? [{ icon: Layers, label: 'Пластик', value: quote.material.name }] : [])),
                 ...(quote.printer ? [{ icon: Printer, label: 'Принтер', value: quote.printer.name }] : []),
               ].map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex items-center gap-2 bg-muted/50 rounded-lg p-2.5">
@@ -113,10 +110,10 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
               ))}
             </div>
 
-            {/* AMS Material color dots */}
-            {quote.amsMaterials && quote.amsMaterials.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                {quote.amsMaterials.map((a, i) => (
+            {/* Materials as chips */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {quote.amsMaterials && quote.amsMaterials.length > 0 ? (
+                quote.amsMaterials.map((a, i) => (
                   <div key={i} className="flex items-center gap-1.5 bg-muted/50 rounded-full px-2.5 py-1">
                     {a.colorHex && (
                       <div className="w-3.5 h-3.5 rounded-full border" style={{ backgroundColor: a.colorHex }} />
@@ -124,9 +121,17 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
                     <span className="text-xs">{a.name || 'Матеріал'}</span>
                     <span className="text-xs text-muted-foreground">{a.weightGrams}г</span>
                   </div>
-                ))}
-              </div>
-            )}
+                ))
+              ) : quote.material ? (
+                <div className="flex items-center gap-1.5 bg-muted/50 rounded-full px-2.5 py-1">
+                  {quote.material.colorHex && (
+                    <div className="w-3.5 h-3.5 rounded-full border" style={{ backgroundColor: quote.material.colorHex }} />
+                  )}
+                  <span className="text-xs">{quote.material.name}</span>
+                  <span className="text-xs text-muted-foreground">{quote.weightGrams}г</span>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
 
