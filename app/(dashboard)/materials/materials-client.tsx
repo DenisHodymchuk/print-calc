@@ -61,7 +61,7 @@ function TypeFilterDropdown({ value, onChange }: { value: string; onChange: (v: 
         ref={btnRef}
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm flex items-center gap-2 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/50"
+        className="h-9 rounded-lg border border-input bg-transparent px-3 py-0 text-sm flex items-center gap-1.5 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/50"
       >
         {label}
         <svg className="w-4 h-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>

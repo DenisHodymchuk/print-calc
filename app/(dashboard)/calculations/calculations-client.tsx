@@ -119,7 +119,7 @@ function FilterDropdown({ value, onChange }: { value: string; onChange: (v: stri
       <button
         ref={btnRef}
         onClick={() => setOpen(o => !o)}
-        className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm flex items-center gap-2 hover:bg-accent transition-colors"
+        className="h-9 rounded-lg border border-input bg-transparent px-3 py-0 text-sm flex items-center gap-1.5 hover:bg-accent transition-colors"
       >
         <span>{label}</span>
         <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
