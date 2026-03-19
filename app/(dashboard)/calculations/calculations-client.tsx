@@ -23,6 +23,7 @@ type Calculation = {
   clientName: string | null
   photoUrl: string | null
   isTemplate: boolean
+  modelId: string | null
   quoteToken: string | null
   createdAt: string
   material: { name: string; type: string; colorHex: string | null } | null
@@ -152,12 +153,55 @@ function FilterDropdown({ value, onChange }: { value: string; onChange: (v: stri
   )
 }
 
+type ModelOption = { id: string; name: string; category: string; photoUrl: string | null }
+
+function ModelPickerDialog({ onSelect, onClose }: { onSelect: (modelId: string) => void; onClose: () => void }) {
+  const [models, setModels] = useState<ModelOption[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/library').then(r => r.json()).then(d => { setModels(d); setLoading(false) })
+  }, [])
+
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/50" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-5 space-y-3" onClick={e => e.stopPropagation()}>
+        <h3 className="font-bold text-base">Додати до моделі</h3>
+        {loading ? <p className="text-sm text-muted-foreground">Завантаження...</p> : models.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-4 text-center">Спочатку створіть модель у бібліотеці</p>
+        ) : (
+          <div className="space-y-1 max-h-64 overflow-y-auto">
+            {models.map(m => (
+              <button key={m.id} onClick={() => onSelect(m.id)}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent text-left transition-colors">
+                {m.photoUrl ? (
+                  <img src={m.photoUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
+                ) : (
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                    <BookOpen className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                )}
+                <div>
+                  <p className="font-medium text-sm">{m.name}</p>
+                  <p className="text-xs text-muted-foreground">{m.category}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+        <Button variant="outline" onClick={onClose} className="w-full">Скасувати</Button>
+      </div>
+    </div>
+  )
+}
+
 export function CalculationsClient() {
   const router = useRouter()
   const [calculations, setCalculations] = useState<Calculation[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [linkCalcId, setLinkCalcId] = useState<string | null>(null)
 
   const fetchCalculations = useCallback(async () => {
     setLoading(true)
@@ -200,24 +244,23 @@ export function CalculationsClient() {
     }
   }
 
-  async function handleToggleLibrary(id: string, isTemplate: boolean) {
-    if (isTemplate) {
-      const res = await fetch('/api/library', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'remove', calculationId: id }),
-      })
-      if (res.ok) { toast.success('Видалено з бібліотеки'); fetchCalculations() }
-      return
-    }
-    const category = prompt('Введіть категорію (обов\'язково):\nНапр: Брелоки, Вази, Іграшки')
-    if (!category || !category.trim()) { toast.error('Категорія обов\'язкова для додавання в бібліотеку'); return }
+  async function handleLinkToModel(calcId: string, modelId: string) {
     const res = await fetch('/api/library', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'add', calculationId: id, category: category.trim() }),
+      body: JSON.stringify({ action: 'link', calculationId: calcId, modelId }),
     })
-    if (res.ok) { toast.success('Додано до бібліотеки'); fetchCalculations() }
+    if (res.ok) { toast.success('Додано до моделі'); fetchCalculations() }
+    setLinkCalcId(null)
+  }
+
+  async function handleUnlinkFromModel(calcId: string) {
+    const res = await fetch('/api/library', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'unlink', calculationId: calcId }),
+    })
+    if (res.ok) { toast.success('Відв\'язано від моделі'); fetchCalculations() }
   }
 
   function copyQuoteLink(token: string) {
@@ -323,9 +366,9 @@ export function CalculationsClient() {
                       <Pencil className="w-4 h-4" />
                     </Button>
                     <Button
-                      size="icon" variant="ghost" className={`h-8 w-8 ${c.isTemplate ? 'text-primary' : ''}`}
-                      title={c.isTemplate ? 'Видалити з бібліотеки' : 'Зберегти в бібліотеку'}
-                      onClick={() => handleToggleLibrary(c.id, c.isTemplate)}
+                      size="icon" variant="ghost" className={`h-8 w-8 ${c.modelId ? 'text-primary' : ''}`}
+                      title={c.modelId ? 'Відв\'язати від моделі' : 'Додати до моделі'}
+                      onClick={() => c.modelId ? handleUnlinkFromModel(c.id) : setLinkCalcId(c.id)}
                     >
                       <BookOpen className="w-4 h-4" />
                     </Button>
@@ -359,6 +402,13 @@ export function CalculationsClient() {
             </Card>
           ))}
         </div>
+      )}
+
+      {linkCalcId && (
+        <ModelPickerDialog
+          onSelect={(modelId) => handleLinkToModel(linkCalcId, modelId)}
+          onClose={() => setLinkCalcId(null)}
+        />
       )}
     </div>
   )
