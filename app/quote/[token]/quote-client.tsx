@@ -70,44 +70,46 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-        {/* Photo */}
-        {quote.photoUrl && (
-          <div className="rounded-xl overflow-hidden border">
-            <img
-              src={quote.photoUrl}
-              alt={quote.name}
-              className="w-full object-cover max-h-80"
-            />
-          </div>
-        )}
-
-        {/* Main info */}
-        <div>
-          {quote.clientName && (
-            <p className="text-sm text-muted-foreground mb-1">Для: {quote.clientName}</p>
-          )}
-          <h1 className="text-2xl font-bold">{quote.name}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Дата: {new Date(quote.createdAt).toLocaleDateString('uk-UA')}
-          </p>
-        </div>
-
-        {/* Details */}
-        <div className="grid grid-cols-2 gap-4">
-          {[
-            { icon: Clock, label: 'Час друку', value: formatTime(quote.printTimeMinutes) },
-            { icon: Package, label: 'Вага', value: `${quote.weightGrams} г` },
-            ...(quote.material ? [{ icon: Layers, label: 'Пластик', value: quote.material.name }] : []),
-            ...(quote.printer ? [{ icon: Printer, label: 'Принтер', value: quote.printer.name }] : []),
-          ].map(({ icon: Icon, label, value }) => (
-            <div key={label} className="flex items-center gap-3 bg-muted/50 rounded-lg p-3">
-              <Icon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-              <div>
-                <p className="text-xs text-muted-foreground">{label}</p>
-                <p className="font-medium text-sm">{value}</p>
-              </div>
+        {/* Main info with photo */}
+        <div className={`flex gap-6 ${quote.photoUrl ? 'items-start' : ''}`}>
+          {quote.photoUrl && (
+            <div className="rounded-xl overflow-hidden border flex-shrink-0 w-48">
+              <img
+                src={quote.photoUrl}
+                alt={quote.name}
+                className="w-full h-48 object-cover"
+              />
             </div>
-          ))}
+          )}
+          <div className="flex-1 space-y-4">
+            <div>
+              {quote.clientName && (
+                <p className="text-sm text-muted-foreground mb-1">Для: {quote.clientName}</p>
+              )}
+              <h1 className="text-2xl font-bold">{quote.name}</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Дата: {new Date(quote.createdAt).toLocaleDateString('uk-UA')}
+              </p>
+            </div>
+
+            {/* Details */}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { icon: Clock, label: 'Час друку', value: formatTime(quote.printTimeMinutes) },
+                { icon: Package, label: 'Вага', value: `${quote.weightGrams} г` },
+                ...(quote.material ? [{ icon: Layers, label: 'Пластик', value: quote.material.name }] : []),
+                ...(quote.printer ? [{ icon: Printer, label: 'Принтер', value: quote.printer.name }] : []),
+              ].map(({ icon: Icon, label, value }) => (
+                <div key={label} className="flex items-center gap-2 bg-muted/50 rounded-lg p-2.5">
+                  <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="font-medium text-sm">{value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Post-processing */}
