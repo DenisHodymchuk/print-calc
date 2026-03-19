@@ -338,43 +338,43 @@ export function CalculatorClient() {
                 <Label>Назва виробу</Label>
                 <Input name="name" value={form.name} onChange={handleChange} placeholder="Напр: Підставка для телефону" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Принтер</Label>
-                  <PrinterSelect
-                    printers={printers}
-                    value={form.printerId}
-                    onChange={v => setForm(p => ({ ...p, printerId: v }))}
-                  />
-                </div>
-                {!useAms && (
-                  <div className="space-y-2">
-                    <Label>Пластик</Label>
-                    <MaterialSelect
-                      materials={materials}
-                      value={form.materialId}
-                      onChange={v => setForm(p => ({ ...p, materialId: v }))}
-                    />
-                  </div>
-                )}
+              <div className="space-y-2">
+                <Label>Принтер</Label>
+                <PrinterSelect
+                  printers={printers}
+                  value={form.printerId}
+                  onChange={v => setForm(p => ({ ...p, printerId: v }))}
+                />
               </div>
 
-              {/* AMS toggle */}
+              {/* AMS toggle — before material selection */}
               <div className="flex items-center gap-3">
+                <Label className="text-sm">Тип друку</Label>
                 <div className="flex rounded-lg border border-input overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setUseAms(false)}
                     className={`text-xs px-3 py-1.5 transition-colors ${!useAms ? 'bg-primary text-white' : 'bg-transparent text-foreground hover:bg-accent'}`}
-                  >1 пластик</button>
+                  >Однотонний</button>
                   <button
                     type="button"
                     onClick={() => setUseAms(true)}
                     className={`text-xs px-3 py-1.5 border-l border-input transition-colors ${useAms ? 'bg-primary text-white' : 'bg-transparent text-foreground hover:bg-accent'}`}
-                  >AMS (кілька)</button>
+                  >Багатокольоровий (AMS)</button>
                 </div>
-                {useAms && <span className="text-xs text-muted-foreground">Мультикольоровий друк</span>}
               </div>
+
+              {/* Single material */}
+              {!useAms && (
+                <div className="space-y-2">
+                  <Label>Пластик</Label>
+                  <MaterialSelect
+                    materials={materials}
+                    value={form.materialId}
+                    onChange={v => setForm(p => ({ ...p, materialId: v }))}
+                  />
+                </div>
+              )}
 
               {/* AMS materials */}
               {useAms && (
