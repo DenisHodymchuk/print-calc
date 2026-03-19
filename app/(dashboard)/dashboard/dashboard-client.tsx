@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { TrendingUp, TrendingDown, Calculator, Layers, Printer, Plus } from 'lucide-react'
+import { TrendingUp, TrendingDown, Calculator, Layers, Printer } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -123,11 +123,8 @@ export function DashboardClient() {
             ) : (
               <div className="h-64 flex flex-col items-center justify-center text-muted-foreground">
                 <Calculator className="w-12 h-12 mb-3 opacity-30" />
-                <p>Немає даних для відображення</p>
-                <p className="text-sm">Створіть перший розрахунок</p>
-                <Button className="mt-4 gap-2 bg-[#1a1a1a] hover:bg-[#333] text-white font-bold" onClick={() => router.push('/calculator')}>
-                  <Plus className="w-4 h-4" /> Новий розрахунок
-                </Button>
+                <p>Ще немає завершених замовлень</p>
+                <p className="text-sm">Діаграма будується на розрахунках зі статусом «Готово»</p>
               </div>
             )}
           </CardContent>
