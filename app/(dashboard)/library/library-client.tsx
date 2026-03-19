@@ -288,58 +288,63 @@ export function LibraryClient() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {templates.map(t => (
             <Card key={t.id} className="group hover:shadow-md transition-shadow overflow-hidden">
-              {/* Photo */}
-              {t.photoUrl ? (
-                <div className="h-44 overflow-hidden">
-                  <img src={t.photoUrl} alt={t.name} className="w-full h-full object-cover" />
-                </div>
-              ) : (
-                <div className="h-44 flex items-center justify-center" style={{ backgroundColor: t.material?.colorHex || '#e5e5e0' }}>
-                  <Package className="w-12 h-12 text-white/50" />
-                </div>
-              )}
-
-              <CardContent className="p-4 space-y-2">
-                {/* Title row with category */}
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-bold text-base leading-tight">{t.name}</p>
-                  {t.category && <Badge variant="outline" className="text-xs flex-shrink-0">{t.category}</Badge>}
-                </div>
-
-                {/* Material */}
-                {t.material && (
-                  <p className="text-xs text-muted-foreground">{t.material.name}</p>
-                )}
-
-                {/* Details row */}
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  {t.printer && (
-                    <span className="flex items-center gap-1">
-                      <Printer className="w-3 h-3" /> {t.printer.name}
-                    </span>
+              <CardContent className="p-0">
+                <div className="flex">
+                  {/* Photo left */}
+                  {t.photoUrl ? (
+                    <div className="w-32 flex-shrink-0">
+                      <img src={t.photoUrl} alt={t.name} className="w-full h-full object-cover min-h-[130px]" />
+                    </div>
+                  ) : (
+                    <div className="w-32 flex-shrink-0 flex items-center justify-center min-h-[130px]" style={{ backgroundColor: t.material?.colorHex || '#e5e5e0' }}>
+                      <Package className="w-10 h-10 text-white/50" />
+                    </div>
                   )}
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {formatTime(t.printTimeMinutes)}
-                  </span>
-                  <span>{t.weightGrams}г</span>
-                </div>
 
-                {/* Price + actions */}
-                <div className="flex items-center justify-between pt-1">
-                  <div>
-                    <span className="font-bold text-base">{t.sellingPrice.toFixed(0)} ₴</span>
-                    <span className="text-xs text-muted-foreground ml-1.5">собівартість: {t.totalCost.toFixed(0)} ₴</span>
-                  </div>
-                  <div className="flex gap-0.5">
-                    <Button size="icon" variant="ghost" className="h-7 w-7" title="Редагувати" onClick={() => setEditTemplate(t)}>
-                      <Pencil className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" title="Новий розрахунок" onClick={() => router.push(`/calculator?from=${t.id}`)}>
-                      <Plus className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-7 w-7 hover:text-destructive" title="Видалити" onClick={() => handleRemove(t.id)}>
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                  {/* Content right */}
+                  <div className="flex-1 p-3 flex flex-col justify-between gap-1.5">
+                    {/* Title + category */}
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-bold text-sm leading-tight">{t.name}</p>
+                        {t.category && <Badge variant="outline" className="text-[10px] flex-shrink-0">{t.category}</Badge>}
+                      </div>
+                      {t.material && (
+                        <p className="text-xs text-muted-foreground mt-0.5">{t.material.name}</p>
+                      )}
+                    </div>
+
+                    {/* Details */}
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                      {t.printer && (
+                        <span className="flex items-center gap-1">
+                          <Printer className="w-3 h-3" /> {t.printer.name}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {formatTime(t.printTimeMinutes)}
+                      </span>
+                      <span>{t.weightGrams}г</span>
+                    </div>
+
+                    {/* Price + actions */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-bold text-sm">{t.sellingPrice.toFixed(0)} ₴</span>
+                        <span className="text-[10px] text-muted-foreground ml-1">собівартість: {t.totalCost.toFixed(0)} ₴</span>
+                      </div>
+                      <div className="flex gap-0.5">
+                        <Button size="icon" variant="ghost" className="h-6 w-6" title="Редагувати" onClick={() => setEditTemplate(t)}>
+                          <Pencil className="w-3 h-3" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-6 w-6" title="Новий розрахунок" onClick={() => router.push(`/calculator?from=${t.id}`)}>
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-6 w-6 hover:text-destructive" title="Видалити" onClick={() => handleRemove(t.id)}>
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
