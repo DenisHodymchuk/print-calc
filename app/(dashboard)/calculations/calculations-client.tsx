@@ -158,38 +158,76 @@ type ModelOption = { id: string; name: string; category: string; photoUrl: strin
 function ModelPickerDialog({ onSelect, onClose }: { onSelect: (modelId: string) => void; onClose: () => void }) {
   const [models, setModels] = useState<ModelOption[]>([])
   const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newCategory, setNewCategory] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     fetch('/api/library').then(r => r.json()).then(d => { setModels(d); setLoading(false) })
   }, [])
 
+  async function handleCreate() {
+    if (!newName.trim() || !newCategory.trim()) { toast.error('Введіть назву та категорію'); return }
+    setSaving(true)
+    const res = await fetch('/api/library', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'create', name: newName.trim(), category: newCategory.trim() }),
+    })
+    setSaving(false)
+    if (res.ok) {
+      const model = await res.json()
+      onSelect(model.id)
+    } else {
+      toast.error('Помилка створення')
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/50" onClick={onClose}>
       <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-5 space-y-3" onClick={e => e.stopPropagation()}>
         <h3 className="font-bold text-base">Додати до моделі</h3>
-        {loading ? <p className="text-sm text-muted-foreground">Завантаження...</p> : models.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">Спочатку створіть модель у бібліотеці</p>
-        ) : (
-          <div className="space-y-1 max-h-64 overflow-y-auto">
-            {models.map(m => (
-              <button key={m.id} onClick={() => onSelect(m.id)}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent text-left transition-colors">
-                {m.photoUrl ? (
-                  <img src={m.photoUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
-                ) : (
-                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
-                    <BookOpen className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                )}
-                <div>
-                  <p className="font-medium text-sm">{m.name}</p>
-                  <p className="text-xs text-muted-foreground">{m.category}</p>
-                </div>
-              </button>
-            ))}
+
+        {creating ? (
+          <div className="space-y-3">
+            <Input placeholder="Назва моделі" value={newName} onChange={e => setNewName(e.target.value)} />
+            <Input placeholder="Категорія (Брелоки, Вази...)" value={newCategory} onChange={e => setNewCategory(e.target.value)} />
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setCreating(false)} className="flex-1">Назад</Button>
+              <Button onClick={handleCreate} disabled={saving} className="flex-1">
+                {saving ? 'Створення...' : 'Створити'}
+              </Button>
+            </div>
           </div>
+        ) : (
+          <>
+            {loading ? <p className="text-sm text-muted-foreground">Завантаження...</p> : (
+              <div className="space-y-1 max-h-64 overflow-y-auto">
+                {models.map(m => (
+                  <button key={m.id} onClick={() => onSelect(m.id)}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent text-left transition-colors">
+                    {m.photoUrl ? (
+                      <img src={m.photoUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
+                        <BookOpen className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-medium text-sm">{m.name}</p>
+                      <p className="text-xs text-muted-foreground">{m.category}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            <Button variant="outline" onClick={() => setCreating(true)} className="w-full gap-2">
+              <Plus className="w-4 h-4" /> Створити нову модель
+            </Button>
+            <Button variant="ghost" onClick={onClose} className="w-full text-muted-foreground">Скасувати</Button>
+          </>
         )}
-        <Button variant="outline" onClick={onClose} className="w-full">Скасувати</Button>
       </div>
     </div>
   )
