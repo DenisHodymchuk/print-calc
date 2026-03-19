@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
       name: body.name || 'Новий розрахунок',
       printerId: body.printerId || null,
       materialId: body.materialId || null,
-      status: body.status || 'DRAFT',
+      status: body.status || (body.clientName ? 'QUOTED' : 'DRAFT'),
       weightGrams: parseFloat(body.weightGrams) || 0,
       printTimeMinutes: parseFloat(body.printTimeMinutes) || 0,
       layerHeight: parseFloat(body.layerHeight) || 0.2,

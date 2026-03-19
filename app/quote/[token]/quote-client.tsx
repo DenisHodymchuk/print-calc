@@ -100,7 +100,7 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
           {[
             { icon: Clock, label: 'Час друку', value: formatTime(quote.printTimeMinutes) },
             { icon: Package, label: 'Вага', value: `${quote.weightGrams} г` },
-            ...(quote.material ? [{ icon: Layers, label: 'Матеріал', value: `${quote.material.name} (${quote.material.type})` }] : []),
+            ...(quote.material ? [{ icon: Layers, label: 'Пластик', value: quote.material.name }] : []),
             ...(quote.printer ? [{ icon: Printer, label: 'Принтер', value: quote.printer.name }] : []),
           ].map(({ icon: Icon, label, value }) => (
             <div key={label} className="flex items-center gap-3 bg-muted/50 rounded-lg p-3">

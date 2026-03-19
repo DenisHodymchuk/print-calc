@@ -522,7 +522,8 @@ export function CalculatorClient() {
 
           {selectedMaterial && (
             <Card>
-              <CardContent className="pt-4 text-sm space-y-1">
+              <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Філамент</CardTitle></CardHeader>
+              <CardContent className="text-sm space-y-1">
                 <p className="font-medium">{selectedMaterial.name}</p>
                 <p className="text-muted-foreground">{selectedMaterial.type} · {selectedMaterial.pricePerKg} ₴/кг</p>
                 <p className="text-muted-foreground">Відходи: {(selectedMaterial.failureRate * 100).toFixed(0)}%</p>
@@ -532,7 +533,8 @@ export function CalculatorClient() {
 
           {selectedPrinter && (
             <Card>
-              <CardContent className="pt-4 text-sm space-y-1">
+              <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Принтер</CardTitle></CardHeader>
+              <CardContent className="text-sm space-y-1">
                 <p className="font-medium">{selectedPrinter.name}</p>
                 <p className="text-muted-foreground">{selectedPrinter.powerWatts} Вт · {selectedPrinter.lifetimeHours.toLocaleString()} год ресурс</p>
               </CardContent>

@@ -23,11 +23,11 @@ export async function GET() {
   ] = await Promise.all([
     prisma.calculation.count({ where: { userId } }),
     prisma.calculation.findMany({
-      where: { userId, createdAt: { gte: startOfMonth } },
+      where: { userId, createdAt: { gte: startOfMonth }, status: 'DONE' },
       select: { sellingPrice: true, totalCost: true },
     }),
     prisma.calculation.findMany({
-      where: { userId, createdAt: { gte: startOfLastMonth, lte: endOfLastMonth } },
+      where: { userId, createdAt: { gte: startOfLastMonth, lte: endOfLastMonth }, status: 'DONE' },
       select: { sellingPrice: true, totalCost: true },
     }),
     prisma.calculation.findMany({
@@ -49,7 +49,7 @@ export async function GET() {
     const start = new Date(now.getFullYear(), now.getMonth() - i, 1)
     const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0)
     const calcs = await prisma.calculation.findMany({
-      where: { userId, createdAt: { gte: start, lte: end } },
+      where: { userId, createdAt: { gte: start, lte: end }, status: 'DONE' },
       select: { sellingPrice: true, totalCost: true },
     })
     const revenue = calcs.reduce((s, c) => s + c.sellingPrice, 0)

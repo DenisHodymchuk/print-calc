@@ -144,7 +144,11 @@ export function DashboardClient() {
               <p className="text-sm text-muted-foreground py-4 text-center">Немає розрахунків</p>
             ) : (
               data.recentCalcs.map(c => (
-                <div key={c.id} className="flex items-center gap-3">
+                <div
+                  key={c.id}
+                  className="flex items-center gap-3 cursor-pointer hover:bg-accent/50 -mx-2 px-2 py-1 rounded-lg transition-colors"
+                  onClick={() => router.push(`/calculator?edit=${c.id}`)}
+                >
                   {c.material?.colorHex && (
                     <div className="w-8 h-8 rounded-full border flex-shrink-0"
                       style={{ backgroundColor: c.material.colorHex }} />

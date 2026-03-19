@@ -41,8 +41,16 @@ const STATUS_ORDER = ['DRAFT', 'QUOTED', 'APPROVED', 'PRINTING', 'DONE']
 
 function StatusDropdown({ status, onChangeStatus }: { status: string; onChangeStatus: (s: string) => void }) {
   const [open, setOpen] = useState(false)
-  const btnRef = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
   const popupRef = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+
+  useEffect(() => {
+    if (open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX })
+    }
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -56,8 +64,9 @@ function StatusDropdown({ status, onChangeStatus }: { status: string; onChangeSt
   }, [open])
 
   return (
-    <div ref={btnRef} className="relative inline-flex">
+    <div className="inline-flex">
       <button
+        ref={btnRef}
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-1 cursor-pointer"
       >
@@ -69,7 +78,8 @@ function StatusDropdown({ status, onChangeStatus }: { status: string; onChangeSt
       {open && (
         <div
           ref={popupRef}
-          className="absolute top-full left-0 mt-1 z-50 rounded-lg border border-input bg-white shadow-lg overflow-hidden min-w-[140px]"
+          className="fixed z-[200] rounded-lg border border-input bg-white shadow-lg overflow-hidden min-w-[140px]"
+          style={{ top: pos.top, left: pos.left }}
         >
           {STATUS_ORDER.map(s => (
             <button
