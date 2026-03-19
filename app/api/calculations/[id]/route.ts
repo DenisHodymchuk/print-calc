@@ -98,6 +98,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       sellingPrice,
       clientName: body.clientName !== undefined ? body.clientName : existing.clientName,
       clientEmail: body.clientEmail !== undefined ? body.clientEmail : existing.clientEmail,
+      photoUrl: body.photoUrl !== undefined ? (body.photoUrl || null) : existing.photoUrl,
       notes: body.notes !== undefined ? body.notes : existing.notes,
       ...(body.quoteApproved ? { quoteApprovedAt: new Date(), status: 'APPROVED' } : {}),
       ...(body.postProcessSteps !== undefined ? {

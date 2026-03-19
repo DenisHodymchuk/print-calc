@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Pencil, Trash2, Zap, Clock, Wrench } from 'lucide-react'
+import { Plus, Pencil, Trash2, Zap, Clock, Wrench, CircleDollarSign } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -129,9 +129,12 @@ export function PrintersClient() {
                         <p className="font-medium">{p.maintenanceReservePerHour.toFixed(2)} ₴/год</p>
                       </div>
                     </div>
-                    <div>
-                      <p className="text-muted-foreground text-xs">Вартість часу</p>
-                      <p className="font-semibold text-base">{costPerHour.toFixed(2)} ₴/год</p>
+                    <div className="flex items-center gap-2">
+                      <CircleDollarSign className="w-4 h-4 text-green-500" />
+                      <div>
+                        <p className="text-muted-foreground text-xs">Вартість часу</p>
+                        <p className="font-semibold text-base">{costPerHour.toFixed(2)} ₴/год</p>
+                      </div>
                     </div>
                   </div>
 

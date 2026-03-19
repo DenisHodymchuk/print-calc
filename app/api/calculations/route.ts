@@ -103,6 +103,7 @@ export async function POST(req: NextRequest) {
       clientName: body.clientName || null,
       clientEmail: body.clientEmail || null,
       quoteToken,
+      photoUrl: body.photoUrl || null,
       notes: body.notes || null,
       postProcessSteps: {
         create: (body.postProcessSteps || []).map((s: { name: string; timeMinutes: number; materialCost: number }) => ({

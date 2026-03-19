@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -74,11 +73,9 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
         {/* Photo */}
         {quote.photoUrl && (
           <div className="rounded-xl overflow-hidden border">
-            <Image
+            <img
               src={quote.photoUrl}
               alt={quote.name}
-              width={800}
-              height={400}
               className="w-full object-cover max-h-80"
             />
           </div>

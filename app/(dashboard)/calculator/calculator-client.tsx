@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { Plus, Trash2, Save, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Trash2, Save, ChevronDown, ChevronUp, ImagePlus, X } from 'lucide-react'
 import { calculateCosts, calculateSellingPrice } from '@/lib/cost-calculator'
 
 type Material = { id: string; name: string; brand: string | null; type: string; color: string | null; colorHex: string | null; pricePerKg: number; density: number; failureRate: number }
@@ -163,6 +163,7 @@ export function CalculatorClient() {
     discountPercent: '0',
     clientName: '',
     notes: '',
+    photoUrl: '',
   })
   const [postSteps, setPostSteps] = useState<PostStep[]>([])
   const [electricityRate] = useState(4.32)
@@ -193,6 +194,7 @@ export function CalculatorClient() {
         discountPercent: String(data.discountPercent || '0'),
         clientName: data.clientName || '',
         notes: data.notes || '',
+        photoUrl: data.photoUrl || '',
       })
       if (data.postProcessSteps?.length) {
         setPostSteps(data.postProcessSteps.map((s: PostStep & { id?: string }) => ({ name: s.name, timeMinutes: s.timeMinutes, materialCost: s.materialCost })))
@@ -205,6 +207,29 @@ export function CalculatorClient() {
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new window.Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const MAX = 800
+        let w = img.width, h = img.height
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX }
+          else { w = Math.round(w * MAX / h); h = MAX }
+        }
+        canvas.width = w; canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+        setForm(prev => ({ ...prev, photoUrl: canvas.toDataURL('image/jpeg', 0.7) }))
+      }
+      img.src = reader.result as string
+    }
+    reader.readAsDataURL(file)
   }
 
   const selectedMaterial = materials.find(m => m.id === form.materialId)
@@ -451,6 +476,27 @@ export function CalculatorClient() {
                   <Label>Нотатки</Label>
                   <Input name="notes" value={form.notes} onChange={handleChange} placeholder="Додаткова інформація..." />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Фото виробу</Label>
+                {form.photoUrl ? (
+                  <div className="relative inline-block">
+                    <img src={form.photoUrl} alt="Фото" className="h-32 rounded-lg border object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setForm(p => ({ ...p, photoUrl: '' }))}
+                      className="absolute -top-2 -right-2 bg-destructive text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-destructive/80"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-2 cursor-pointer text-sm text-muted-foreground border border-dashed border-input rounded-lg px-4 py-3 hover:bg-accent/50 transition-colors">
+                    <ImagePlus className="w-4 h-4" />
+                    Завантажити фото
+                    <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+                  </label>
+                )}
               </div>
             </CardContent>
           </Card>
