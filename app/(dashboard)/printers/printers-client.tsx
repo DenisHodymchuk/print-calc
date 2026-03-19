@@ -5,7 +5,6 @@ import { Plus, Pencil, Trash2, Zap, Clock, Wrench, CircleDollarSign } from 'luci
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { PrinterDialog } from './printer-dialog'
 
 export type Printer = {
@@ -139,12 +138,12 @@ export function PrintersClient() {
                   </div>
 
                   <div className="space-y-2 pt-1 border-t border-border">
-                    <div className="flex justify-between text-xs">
+                    <div className="flex justify-between items-center text-xs">
                       <span className="text-muted-foreground">Ціна принтера</span>
-                      <Badge variant="outline">{p.purchasePrice.toLocaleString()} ₴</Badge>
+                      <span className="font-medium text-foreground">{p.purchasePrice.toLocaleString()} ₴</span>
                     </div>
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Годин друку до окупності</span>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-muted-foreground">Годин друку до окупності</span>
                       <span className="font-medium text-foreground">{roiHours.toLocaleString()} год</span>
                     </div>
                   </div>
