@@ -35,6 +35,7 @@ type Variant = {
   infillPercent: number
   layerHeight: number
   hasSupports: boolean
+  photoUrl: string | null
   createdAt: string
   material: { name: string; type: string; colorHex: string | null; color: string | null } | null
   printer: { name: string } | null
@@ -256,11 +257,13 @@ function ModelDetailView({ modelId, onBack }: { modelId: string; onBack: () => v
           {model.calculations.map(v => (
             <Card key={v.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4 space-y-3">
-                {/* Header: material + printer */}
+                {/* Header: photo + material + printer */}
                 <div className="flex items-center gap-2">
-                  {v.material?.colorHex && (
+                  {v.photoUrl ? (
+                    <img src={v.photoUrl} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                  ) : v.material?.colorHex ? (
                     <div className="w-6 h-6 rounded-full border flex-shrink-0" style={{ backgroundColor: v.material.colorHex }} />
-                  )}
+                  ) : null}
                   <div className="flex-1 min-w-0">
                     {v.material && <p className="font-medium text-sm truncate">{v.material.name}</p>}
                     {v.printer && <p className="text-xs text-muted-foreground">{v.printer.name}</p>}
@@ -389,30 +392,30 @@ export function LibraryClient() {
           <p className="text-sm mb-4">Створіть першу модель і додайте до неї розрахунки</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {models.map(m => (
             <Card key={m.id} className="group hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedModelId(m.id)}>
-              <CardContent className="p-3 flex items-center gap-3">
+              <CardContent className="p-4 flex items-center gap-4">
                 {m.photoUrl ? (
-                  <img src={m.photoUrl} alt={m.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
+                  <img src={m.photoUrl} alt={m.name} className="w-24 h-24 rounded-xl object-cover flex-shrink-0" />
                 ) : (
-                  <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
-                    <Package className="w-7 h-7 text-muted-foreground/30" />
+                  <div className="w-24 h-24 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+                    <Package className="w-10 h-10 text-muted-foreground/30" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{m.name}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="outline" className="text-xs">{m.category}</Badge>
-                    <span className="text-xs text-muted-foreground">{m._count.calculations} вар.</span>
+                  <p className="font-bold text-lg truncate">{m.name}</p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <Badge variant="outline">{m.category}</Badge>
+                    <span className="text-sm text-muted-foreground">{m._count.calculations} варіант(ів)</span>
                   </div>
                 </div>
-                <div className="flex gap-0.5 flex-shrink-0" onClick={e => e.stopPropagation()}>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditModel(m); setShowForm(true) }}>
-                    <Pencil className="w-3.5 h-3.5" />
+                <div className="flex flex-col gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                  <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => { setEditModel(m); setShowForm(true) }}>
+                    <Pencil className="w-4 h-4" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-7 w-7 hover:text-destructive" onClick={() => handleDelete(m.id)}>
-                    <Trash2 className="w-3.5 h-3.5" />
+                  <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-destructive" onClick={() => handleDelete(m.id)}>
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </CardContent>

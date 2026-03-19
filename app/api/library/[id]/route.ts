@@ -17,7 +17,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           materialCost: true, machineCost: true, laborCost: true, overheadCost: true,
           totalCost: true, sellingPrice: true, marginPercent: true, copies: true,
           infillPercent: true, layerHeight: true, hasSupports: true,
-          createdAt: true,
+          photoUrl: true, createdAt: true,
           material: { select: { name: true, type: true, colorHex: true, color: true } },
           printer: { select: { name: true } },
         },
