@@ -201,20 +201,23 @@ export function CalculationsClient() {
   }
 
   async function handleToggleLibrary(id: string, isTemplate: boolean) {
-    const category = isTemplate ? null : prompt('Категорія (необов\'язково):')
+    if (isTemplate) {
+      const res = await fetch('/api/library', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'remove', calculationId: id }),
+      })
+      if (res.ok) { toast.success('Видалено з бібліотеки'); fetchCalculations() }
+      return
+    }
+    const category = prompt('Введіть категорію (обов\'язково):\nНапр: Брелоки, Вази, Іграшки')
+    if (!category || !category.trim()) { toast.error('Категорія обов\'язкова для додавання в бібліотеку'); return }
     const res = await fetch('/api/library', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: isTemplate ? 'remove' : 'add',
-        calculationId: id,
-        category: category || null,
-      }),
+      body: JSON.stringify({ action: 'add', calculationId: id, category: category.trim() }),
     })
-    if (res.ok) {
-      toast.success(isTemplate ? 'Видалено з бібліотеки' : 'Додано до бібліотеки')
-      fetchCalculations()
-    }
+    if (res.ok) { toast.success('Додано до бібліотеки'); fetchCalculations() }
   }
 
   function copyQuoteLink(token: string) {

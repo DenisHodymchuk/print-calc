@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, Trash2, Calculator, FolderOpen, ChevronDown, Tag } from 'lucide-react'
+import { Search, Plus, Trash2, FolderOpen, ChevronDown, Tag, Pencil, X, ImagePlus, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { Printer, Clock, Package } from 'lucide-react'
 
 type Template = {
   id: string
@@ -19,6 +21,7 @@ type Template = {
   copies: number
   sellingPrice: number
   totalCost: number
+  notes: string | null
   createdAt: string
   updatedAt: string
   material: { name: string; type: string; colorHex: string | null; color: string | null } | null
@@ -80,6 +83,118 @@ function CategoryDropdown({ value, onChange, categories }: { value: string; onCh
   )
 }
 
+function EditDialog({ template, onClose, onSaved }: { template: Template; onClose: () => void; onSaved: () => void }) {
+  const [form, setForm] = useState({
+    name: template.name,
+    category: template.category || '',
+    notes: template.notes || '',
+    photoUrl: template.photoUrl || '',
+  })
+  const [saving, setSaving] = useState(false)
+
+  function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new window.Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const MAX = 800
+        let w = img.width, h = img.height
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX }
+          else { w = Math.round(w * MAX / h); h = MAX }
+        }
+        canvas.width = w; canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+        setForm(prev => ({ ...prev, photoUrl: canvas.toDataURL('image/jpeg', 0.7) }))
+      }
+      img.src = reader.result as string
+    }
+    reader.readAsDataURL(file)
+  }
+
+  async function handleSave() {
+    if (!form.name.trim()) { toast.error('Введіть назву'); return }
+    if (!form.category.trim()) { toast.error('Введіть категорію'); return }
+    setSaving(true)
+    const res = await fetch(`/api/calculations/${template.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: form.name,
+        category: form.category,
+        notes: form.notes,
+        photoUrl: form.photoUrl || null,
+      }),
+    })
+    setSaving(false)
+    if (res.ok) {
+      toast.success('Збережено')
+      onSaved()
+      onClose()
+    } else {
+      toast.error('Помилка збереження')
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/50" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-lg">Редагувати модель</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="w-5 h-5" /></button>
+        </div>
+
+        <div className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Назва *</Label>
+            <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Категорія *</Label>
+            <Input value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} placeholder="Брелоки, Вази, Іграшки..." />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Нотатки</Label>
+            <Input value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Додаткова інформація..." />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Фото</Label>
+            {form.photoUrl ? (
+              <div className="relative inline-block">
+                <img src={form.photoUrl} alt="Фото" className="h-28 rounded-lg border object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setForm(p => ({ ...p, photoUrl: '' }))}
+                  className="absolute -top-2 -right-2 bg-destructive text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-muted-foreground border border-dashed border-input rounded-lg px-4 py-3 hover:bg-accent/50 transition-colors">
+                <ImagePlus className="w-4 h-4" />
+                Завантажити фото
+                <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+              </label>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <Button variant="outline" onClick={onClose} className="flex-1">Скасувати</Button>
+          <Button onClick={handleSave} disabled={saving} className="flex-1 gap-2">
+            <Save className="w-4 h-4" />
+            {saving ? 'Збереження...' : 'Зберегти'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function LibraryClient() {
   const router = useRouter()
   const [templates, setTemplates] = useState<Template[]>([])
@@ -87,6 +202,7 @@ export function LibraryClient() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filterCategory, setFilterCategory] = useState('all')
+  const [editTemplate, setEditTemplate] = useState<Template | null>(null)
 
   const fetchTemplates = useCallback(async () => {
     setLoading(true)
@@ -136,24 +252,25 @@ export function LibraryClient() {
     return h > 0 ? `${h}г ${m}хв` : `${m}хв`
   }
 
+  function handleSaved() {
+    fetchTemplates()
+    fetchCategories()
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Toolbar */}
-      <div className="flex flex-wrap gap-3 items-center justify-between">
-        <div className="flex gap-3 flex-wrap flex-1">
-          <div className="relative max-w-xs flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Пошук моделі..."
-              className="pl-9"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-          {categories.length > 0 && (
-            <CategoryDropdown value={filterCategory} onChange={setFilterCategory} categories={categories} />
-          )}
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="relative max-w-xs flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Пошук моделі..."
+            className="pl-9"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
+        <CategoryDropdown value={filterCategory} onChange={setFilterCategory} categories={categories} />
       </div>
 
       {loading ? (
@@ -168,61 +285,76 @@ export function LibraryClient() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="space-y-4">
           {templates.map(t => (
             <Card key={t.id} className="group hover:shadow-md transition-shadow overflow-hidden">
-              {/* Photo */}
-              {t.photoUrl ? (
-                <div className="h-40 overflow-hidden">
-                  <img src={t.photoUrl} alt={t.name} className="w-full h-full object-cover" />
-                </div>
-              ) : (
-                <div className="h-40 flex items-center justify-center" style={{ backgroundColor: t.material?.colorHex || '#e5e5e0' }}>
-                  <Calculator className="w-10 h-10 text-white/60" />
-                </div>
-              )}
+              <CardContent className="p-0">
+                <div className="flex">
+                  {/* Photo on left */}
+                  {t.photoUrl ? (
+                    <div className="w-44 flex-shrink-0">
+                      <img src={t.photoUrl} alt={t.name} className="w-full h-full object-cover min-h-[140px]" />
+                    </div>
+                  ) : (
+                    <div className="w-44 flex-shrink-0 flex items-center justify-center min-h-[140px]" style={{ backgroundColor: t.material?.colorHex || '#e5e5e0' }}>
+                      <Package className="w-10 h-10 text-white/60" />
+                    </div>
+                  )}
 
-              <CardContent className="p-4 space-y-3">
-                <div>
-                  <p className="font-semibold truncate">{t.name}</p>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    {t.category && (
-                      <Badge variant="outline" className="text-xs">{t.category}</Badge>
-                    )}
-                    {t.material && (
-                      <span className="text-xs text-muted-foreground">{t.material.name}</span>
-                    )}
+                  {/* Content */}
+                  <div className="flex-1 p-4 flex flex-col justify-between gap-3">
+                    <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-bold text-lg">{t.name}</p>
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            {t.category && <Badge variant="outline" className="text-xs">{t.category}</Badge>}
+                            {t.material && <span className="text-xs text-muted-foreground">{t.material.name}</span>}
+                          </div>
+                        </div>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <Button size="icon" variant="ghost" className="h-8 w-8" title="Редагувати" onClick={() => setEditTemplate(t)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-destructive" title="Видалити" onClick={() => handleRemove(t.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground flex-wrap">
+                        {t.printer && (
+                          <span className="flex items-center gap-1">
+                            <Printer className="w-3.5 h-3.5" /> {t.printer.name}
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" /> {formatTime(t.printTimeMinutes)}
+                        </span>
+                        <span>{t.weightGrams}г</span>
+                        {t.notes && <span className="text-xs italic">{t.notes}</span>}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <span className="text-lg font-bold">{t.sellingPrice.toFixed(0)} ₴</span>
+                        <span className="text-xs text-muted-foreground ml-2">собівартість: {t.totalCost.toFixed(0)} ₴</span>
+                      </div>
+                      <Button size="sm" className="gap-1.5" onClick={() => router.push(`/calculator?from=${t.id}`)}>
+                        <Plus className="w-3.5 h-3.5" /> Новий розрахунок
+                      </Button>
+                    </div>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                  {t.printer && <span>🖨 {t.printer.name}</span>}
-                  <span>⏱ {formatTime(t.printTimeMinutes)}</span>
-                  <span>⚖ {t.weightGrams}г</span>
-                  <span className="font-medium text-foreground">{t.sellingPrice.toFixed(0)} ₴</span>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    className="flex-1 gap-1"
-                    onClick={() => router.push(`/calculator?from=${t.id}`)}
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Розрахунок
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="hover:text-destructive"
-                    onClick={() => handleRemove(t.id)}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
+      )}
+
+      {editTemplate && (
+        <EditDialog template={editTemplate} onClose={() => setEditTemplate(null)} onSaved={handleSaved} />
       )}
     </div>
   )
