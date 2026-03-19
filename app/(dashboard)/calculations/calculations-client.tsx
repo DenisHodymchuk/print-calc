@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, Trash2, ExternalLink, Copy, CheckCircle, Clock, FileText, Printer } from 'lucide-react'
+import { Search, Plus, Trash2, ExternalLink, Copy, Clock, FileText, Printer, Pencil, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
 
 type Calculation = {
@@ -36,6 +35,109 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_COLORS: Record<string, 'secondary' | 'default' | 'outline' | 'destructive'> = {
   DRAFT: 'secondary', QUOTED: 'outline', APPROVED: 'default',
   PRINTING: 'default', DONE: 'secondary',
+}
+
+const STATUS_ORDER = ['DRAFT', 'QUOTED', 'APPROVED', 'PRINTING', 'DONE']
+
+function StatusDropdown({ status, onChangeStatus }: { status: string; onChangeStatus: (s: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const btnRef = useRef<HTMLDivElement>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handle(e: MouseEvent) {
+      const t = e.target as Node
+      if (btnRef.current?.contains(t) || popupRef.current?.contains(t)) return
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [open])
+
+  return (
+    <div ref={btnRef} className="relative inline-flex">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1 cursor-pointer"
+      >
+        <Badge variant={STATUS_COLORS[status] || 'secondary'} className="text-xs">
+          {STATUS_LABELS[status] || status}
+        </Badge>
+        <ChevronDown className="w-3 h-3 text-muted-foreground" />
+      </button>
+      {open && (
+        <div
+          ref={popupRef}
+          className="absolute top-full left-0 mt-1 z-50 rounded-lg border border-input bg-white shadow-lg overflow-hidden min-w-[140px]"
+        >
+          {STATUS_ORDER.map(s => (
+            <button
+              key={s}
+              onClick={() => { onChangeStatus(s); setOpen(false) }}
+              className={`w-full px-3 py-2 text-sm text-left hover:bg-accent flex items-center gap-2 ${s === status ? 'bg-accent font-medium' : ''}`}
+            >
+              {STATUS_LABELS[s]}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FilterDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handle(e: MouseEvent) {
+      const t = e.target as Node
+      if (btnRef.current?.contains(t) || popupRef.current?.contains(t)) return
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [open])
+
+  const label = value === 'all' ? 'Всі статуси' : STATUS_LABELS[value] || value
+
+  return (
+    <div className="relative">
+      <button
+        ref={btnRef}
+        onClick={() => setOpen(o => !o)}
+        className="h-9 rounded-lg border border-input bg-transparent px-3 text-sm flex items-center gap-2 hover:bg-accent transition-colors min-w-[140px]"
+      >
+        <span>{label}</span>
+        <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
+      </button>
+      {open && (
+        <div
+          ref={popupRef}
+          className="absolute top-full left-0 mt-1 z-50 rounded-lg border border-input bg-white shadow-lg overflow-hidden min-w-[140px]"
+        >
+          <button
+            onClick={() => { onChange('all'); setOpen(false) }}
+            className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${value === 'all' ? 'bg-accent font-medium' : ''}`}
+          >
+            Всі статуси
+          </button>
+          {STATUS_ORDER.map(s => (
+            <button
+              key={s}
+              onClick={() => { onChange(s); setOpen(false) }}
+              className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${s === value ? 'bg-accent font-medium' : ''}`}
+            >
+              {STATUS_LABELS[s]}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function CalculationsClient() {
@@ -72,6 +174,20 @@ export function CalculationsClient() {
     }
   }
 
+  async function handleStatusChange(id: string, status: string) {
+    const res = await fetch(`/api/calculations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    })
+    if (res.ok) {
+      toast.success(`Статус змінено: ${STATUS_LABELS[status]}`)
+      fetchCalculations()
+    } else {
+      toast.error('Помилка зміни статусу')
+    }
+  }
+
   function copyQuoteLink(token: string) {
     const url = `${window.location.origin}/quote/${token}`
     navigator.clipboard.writeText(url)
@@ -98,17 +214,7 @@ export function CalculationsClient() {
               onChange={e => setSearch(e.target.value)}
             />
           </div>
-          <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v ?? 'all')}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Статус" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Всі статуси</SelectItem>
-              {Object.entries(STATUS_LABELS).map(([k, v]) => (
-                <SelectItem key={k} value={k}>{v}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <FilterDropdown value={filterStatus} onChange={setFilterStatus} />
         </div>
         <Button onClick={() => router.push('/calculator')} className="gap-2">
           <Plus className="w-4 h-4" /> Новий розрахунок
@@ -142,9 +248,7 @@ export function CalculationsClient() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold truncate">{c.name}</p>
-                      <Badge variant={STATUS_COLORS[c.status] || 'secondary'} className="text-xs">
-                        {STATUS_LABELS[c.status] || c.status}
-                      </Badge>
+                      <StatusDropdown status={c.status} onChangeStatus={(s) => handleStatusChange(c.id, s)} />
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
                       {c.material && (
@@ -159,7 +263,7 @@ export function CalculationsClient() {
                         <Clock className="w-3 h-3" />{formatTime(c.printTimeMinutes)}
                       </span>
                       <span>{c.weightGrams}г</span>
-                      {c.clientName && <span>👤 {c.clientName}</span>}
+                      {c.clientName && <span>{c.clientName}</span>}
                       <span>{new Date(c.createdAt).toLocaleDateString('uk-UA')}</span>
                     </div>
                   </div>
@@ -177,6 +281,13 @@ export function CalculationsClient() {
 
                   {/* Actions */}
                   <div className="flex gap-1 flex-shrink-0">
+                    <Button
+                      size="icon" variant="ghost" className="h-8 w-8"
+                      title="Редагувати"
+                      onClick={() => router.push(`/calculator?edit=${c.id}`)}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
                     {c.quoteToken && (
                       <Button
                         size="icon" variant="ghost" className="h-8 w-8"

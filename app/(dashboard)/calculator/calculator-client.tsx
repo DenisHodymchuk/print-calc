@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -138,6 +138,8 @@ const COLORS = ['#6366f1', '#f59e0b', '#10b981', '#8b5cf6']
 
 export function CalculatorClient() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const editId = searchParams.get('edit')
   const [materials, setMaterials] = useState<Material[]>([])
   const [printers, setPrinters] = useState<Printer[]>([])
   const [saving, setSaving] = useState(false)
@@ -160,7 +162,6 @@ export function CalculatorClient() {
     marginPercent: '30',
     discountPercent: '0',
     clientName: '',
-    clientEmail: '',
     notes: '',
   })
   const [postSteps, setPostSteps] = useState<PostStep[]>([])
@@ -171,6 +172,36 @@ export function CalculatorClient() {
     fetch('/api/materials').then(r => r.json()).then(setMaterials)
     fetch('/api/printers').then(r => r.json()).then(setPrinters)
   }, [])
+
+  useEffect(() => {
+    if (!editId) return
+    fetch(`/api/calculations/${editId}`).then(r => r.json()).then(data => {
+      setForm({
+        name: data.name || '',
+        printerId: data.printerId || '',
+        materialId: data.materialId || '',
+        weightGrams: String(data.weightGrams || ''),
+        printTimeMinutes: String(data.printTimeMinutes || ''),
+        layerHeight: String(data.layerHeight || '0.2'),
+        infillPercent: String(data.infillPercent || '15'),
+        hasSupports: data.hasSupports || false,
+        supportDensity: String(data.supportDensity || '15'),
+        copies: String(data.copies || '1'),
+        setupMinutes: String(data.setupMinutes || '15'),
+        postProcMinutes: String(data.postProcMinutes || '0'),
+        marginPercent: String(data.marginPercent || '30'),
+        discountPercent: String(data.discountPercent || '0'),
+        clientName: data.clientName || '',
+        notes: data.notes || '',
+      })
+      if (data.postProcessSteps?.length) {
+        setPostSteps(data.postProcessSteps.map((s: PostStep & { id?: string }) => ({ name: s.name, timeMinutes: s.timeMinutes, materialCost: s.materialCost })))
+      }
+      if (data.hasSupports || data.layerHeight !== 0.2 || data.infillPercent !== 15) {
+        setShowAdvanced(true)
+      }
+    })
+  }, [editId])
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
@@ -226,16 +257,17 @@ export function CalculatorClient() {
   async function handleSave() {
     if (!form.name) { toast.error('Введіть назву розрахунку'); return }
     setSaving(true)
-    const res = await fetch('/api/calculations', {
-      method: 'POST',
+    const url = editId ? `/api/calculations/${editId}` : '/api/calculations'
+    const method = editId ? 'PATCH' : 'POST'
+    const res = await fetch(url, {
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...form, postProcessSteps: postSteps }),
     })
     setSaving(false)
     if (res.ok) {
-      const data = await res.json()
-      toast.success('Розрахунок збережено!')
-      router.push(`/calculations`)
+      toast.success(editId ? 'Розрахунок оновлено!' : 'Розрахунок збережено!')
+      router.push('/calculations')
     } else {
       const err = await res.json()
       toast.error(err.error || 'Помилка збереження')
@@ -319,16 +351,16 @@ export function CalculatorClient() {
                   </div>
                   <div className="space-y-2">
                     <Label>Підтримки</Label>
-                    <div className="flex rounded-lg border border-input overflow-hidden h-9">
+                    <div className="flex rounded-lg border border-input overflow-hidden">
                       <button
                         type="button"
                         onClick={() => setForm(p => ({ ...p, hasSupports: false }))}
-                        className={`flex-1 text-sm transition-colors ${!form.hasSupports ? 'bg-primary text-white' : 'bg-transparent text-foreground hover:bg-accent'}`}
+                        className={`flex-1 text-xs px-3 py-1.5 transition-colors ${!form.hasSupports ? 'bg-primary text-white' : 'bg-transparent text-foreground hover:bg-accent'}`}
                       >Без підтримок</button>
                       <button
                         type="button"
                         onClick={() => setForm(p => ({ ...p, hasSupports: true }))}
-                        className={`flex-1 text-sm border-l border-input transition-colors ${form.hasSupports ? 'bg-primary text-white' : 'bg-transparent text-foreground hover:bg-accent'}`}
+                        className={`flex-1 text-xs px-3 py-1.5 border-l border-input transition-colors ${form.hasSupports ? 'bg-primary text-white' : 'bg-transparent text-foreground hover:bg-accent'}`}
                       >З підтримками</button>
                     </div>
                   </div>
@@ -425,7 +457,7 @@ export function CalculatorClient() {
 
           <Button onClick={handleSave} disabled={saving} className="w-full gap-2" size="lg">
             <Save className="w-4 h-4" />
-            {saving ? 'Збереження...' : 'Зберегти розрахунок'}
+            {saving ? 'Збереження...' : editId ? 'Оновити розрахунок' : 'Зберегти розрахунок'}
           </Button>
         </div>
 
@@ -450,7 +482,7 @@ export function CalculatorClient() {
                 {[
                   { label: 'Матеріал', value: costs.materialCost },
                   { label: 'Машинний час', value: costs.machineCost },
-                  { label: 'Праця', value: costs.laborCost },
+                  { label: 'Підготовка', value: costs.laborCost },
                   { label: 'Накладні', value: costs.overheadCost },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex justify-between">
