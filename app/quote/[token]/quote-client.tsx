@@ -93,56 +93,65 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
               </p>
             </div>
 
-            {/* Details */}
-            <div className="grid grid-cols-2 gap-3">
-              {(() => {
-                const isAms = quote.amsMaterials && quote.amsMaterials.length > 0
-                const totalWeight = isAms
-                  ? quote.amsMaterials!.reduce((s, a) => s + (a.weightGrams || 0), 0)
-                  : quote.weightGrams
-                return [
-                  { icon: Clock, label: 'Час друку', value: formatTime(quote.printTimeMinutes) },
-                  { icon: Package, label: 'Вага', value: `${totalWeight} г` },
-                  ...(quote.printer ? [{ icon: Printer, label: 'Принтер', value: quote.printer.name }] : []),
-                ].map(({ icon: Icon, label, value }) => (
-                  <div key={label} className="flex items-center gap-2 bg-muted/50 rounded-lg p-2.5">
-                    <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+            {/* Details grid */}
+            {(() => {
+              const isAms = quote.amsMaterials && quote.amsMaterials.length > 0
+              const totalWeight = isAms
+                ? quote.amsMaterials!.reduce((s, a) => s + (a.weightGrams || 0), 0)
+                : quote.weightGrams
+              const materialLabel = isAms ? 'Пластик (AMS)' : 'Пластик'
+              const materialValue = isAms
+                ? quote.amsMaterials!.map(a => a.name).filter(Boolean).join(', ')
+                : (quote.material?.name || '')
+              return (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-2.5">
+                    <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     <div>
-                      <p className="text-xs text-muted-foreground">{label}</p>
-                      <p className="font-medium text-sm">{value}</p>
+                      <p className="text-xs text-muted-foreground">Час друку</p>
+                      <p className="font-medium text-sm">{formatTime(quote.printTimeMinutes)}</p>
                     </div>
                   </div>
-                ))
-              })()}
-            </div>
-
-            {/* Materials */}
-            {quote.amsMaterials && quote.amsMaterials.length > 0 ? (
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-1.5">
-                  <Layers className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">Пластик (AMS)</span>
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {quote.amsMaterials.map((a, i) => (
-                    <div key={i} className="flex items-center gap-1.5 bg-muted/50 rounded-full px-2.5 py-1">
-                      {a.colorHex && (
-                        <div className="w-3.5 h-3.5 rounded-full border" style={{ backgroundColor: a.colorHex }} />
-                      )}
-                      <span className="text-xs">{a.name || 'Матеріал'}</span>
+                  <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-2.5">
+                    <Package className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">Вага</p>
+                      <p className="font-medium text-sm">{totalWeight} г</p>
                     </div>
-                  ))}
+                  </div>
+                  {quote.printer && (
+                    <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-2.5">
+                      <Printer className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Принтер</p>
+                        <p className="font-medium text-sm">{quote.printer.name}</p>
+                      </div>
+                    </div>
+                  )}
+                  {materialValue && (
+                    <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-2.5">
+                      <Layers className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">{materialLabel}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                          {isAms ? quote.amsMaterials!.map((a, i) => (
+                            <span key={i} className="flex items-center gap-1">
+                              {a.colorHex && <span className="w-3 h-3 rounded-full border inline-block" style={{ backgroundColor: a.colorHex }} />}
+                              <span className="font-medium text-sm">{a.name}</span>
+                            </span>
+                          )) : (
+                            <span className="flex items-center gap-1">
+                              {quote.material?.colorHex && <span className="w-3 h-3 rounded-full border inline-block" style={{ backgroundColor: quote.material.colorHex }} />}
+                              <span className="font-medium text-sm">{quote.material?.name}</span>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ) : quote.material ? (
-              <div className="flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-muted-foreground" />
-                {quote.material.colorHex && (
-                  <div className="w-3.5 h-3.5 rounded-full border" style={{ backgroundColor: quote.material.colorHex }} />
-                )}
-                <span className="text-xs">{quote.material.name}</span>
-              </div>
-            ) : null}
+              )
+            })()}
           </div>
         </div>
 
