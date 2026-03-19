@@ -95,43 +95,54 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
 
             {/* Details */}
             <div className="grid grid-cols-2 gap-3">
-              {[
-                { icon: Clock, label: 'Час друку', value: formatTime(quote.printTimeMinutes) },
-                { icon: Package, label: 'Вага', value: `${quote.weightGrams} г` },
-                ...(quote.printer ? [{ icon: Printer, label: 'Принтер', value: quote.printer.name }] : []),
-              ].map(({ icon: Icon, label, value }) => (
-                <div key={label} className="flex items-center gap-2 bg-muted/50 rounded-lg p-2.5">
-                  <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">{label}</p>
-                    <p className="font-medium text-sm">{value}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Materials as chips */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {quote.amsMaterials && quote.amsMaterials.length > 0 ? (
-                quote.amsMaterials.map((a, i) => (
-                  <div key={i} className="flex items-center gap-1.5 bg-muted/50 rounded-full px-2.5 py-1">
-                    {a.colorHex && (
-                      <div className="w-3.5 h-3.5 rounded-full border" style={{ backgroundColor: a.colorHex }} />
-                    )}
-                    <span className="text-xs">{a.name || 'Матеріал'}</span>
-                    <span className="text-xs text-muted-foreground">{a.weightGrams}г</span>
+              {(() => {
+                const isAms = quote.amsMaterials && quote.amsMaterials.length > 0
+                const totalWeight = isAms
+                  ? quote.amsMaterials!.reduce((s, a) => s + (a.weightGrams || 0), 0)
+                  : quote.weightGrams
+                return [
+                  { icon: Clock, label: 'Час друку', value: formatTime(quote.printTimeMinutes) },
+                  { icon: Package, label: 'Вага', value: `${totalWeight} г` },
+                  ...(quote.printer ? [{ icon: Printer, label: 'Принтер', value: quote.printer.name }] : []),
+                ].map(({ icon: Icon, label, value }) => (
+                  <div key={label} className="flex items-center gap-2 bg-muted/50 rounded-lg p-2.5">
+                    <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-muted-foreground">{label}</p>
+                      <p className="font-medium text-sm">{value}</p>
+                    </div>
                   </div>
                 ))
-              ) : quote.material ? (
-                <div className="flex items-center gap-1.5 bg-muted/50 rounded-full px-2.5 py-1">
-                  {quote.material.colorHex && (
-                    <div className="w-3.5 h-3.5 rounded-full border" style={{ backgroundColor: quote.material.colorHex }} />
-                  )}
-                  <span className="text-xs">{quote.material.name}</span>
-                  <span className="text-xs text-muted-foreground">{quote.weightGrams}г</span>
-                </div>
-              ) : null}
+              })()}
             </div>
+
+            {/* Materials */}
+            {quote.amsMaterials && quote.amsMaterials.length > 0 ? (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Пластик (AMS)</span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {quote.amsMaterials.map((a, i) => (
+                    <div key={i} className="flex items-center gap-1.5 bg-muted/50 rounded-full px-2.5 py-1">
+                      {a.colorHex && (
+                        <div className="w-3.5 h-3.5 rounded-full border" style={{ backgroundColor: a.colorHex }} />
+                      )}
+                      <span className="text-xs">{a.name || 'Матеріал'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : quote.material ? (
+              <div className="flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-muted-foreground" />
+                {quote.material.colorHex && (
+                  <div className="w-3.5 h-3.5 rounded-full border" style={{ backgroundColor: quote.material.colorHex }} />
+                )}
+                <span className="text-xs">{quote.material.name}</span>
+              </div>
+            ) : null}
           </div>
         </div>
 
