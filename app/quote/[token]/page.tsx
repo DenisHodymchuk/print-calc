@@ -17,6 +17,27 @@ export default async function QuotePage({ params }: { params: Promise<{ token: s
 
   if (!calculation) notFound()
 
+  // Resolve AMS material details
+  let amsMaterialsResolved: { materialId: string; weightGrams: number; name: string | null; colorHex: string | null }[] | null = null
+  if (calculation.amsMaterials) {
+    try {
+      const amsArr = JSON.parse(calculation.amsMaterials) as { materialId: string; weightGrams: number }[]
+      if (amsArr.length > 0) {
+        const amsMats = await prisma.material.findMany({
+          where: { id: { in: amsArr.map(a => a.materialId) } },
+          select: { id: true, name: true, colorHex: true },
+        })
+        const matMap = Object.fromEntries(amsMats.map(m => [m.id, m]))
+        amsMaterialsResolved = amsArr.map(a => ({
+          materialId: a.materialId,
+          weightGrams: a.weightGrams,
+          name: matMap[a.materialId]?.name || null,
+          colorHex: matMap[a.materialId]?.colorHex || null,
+        }))
+      }
+    } catch { /* ignore */ }
+  }
+
   const quote = {
     id: calculation.id,
     name: calculation.name,
@@ -35,6 +56,7 @@ export default async function QuotePage({ params }: { params: Promise<{ token: s
     printer: calculation.printer,
     seller: calculation.user,
     postProcessSteps: calculation.postProcessSteps,
+    amsMaterials: amsMaterialsResolved,
   }
 
   return <QuoteClient quote={quote} token={token} />

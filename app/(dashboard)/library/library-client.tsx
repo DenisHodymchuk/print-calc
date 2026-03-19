@@ -36,9 +36,17 @@ type Variant = {
   layerHeight: number
   hasSupports: boolean
   photoUrl: string | null
+  amsMaterials: string | null
   createdAt: string
   material: { name: string; type: string; colorHex: string | null; color: string | null } | null
   printer: { name: string } | null
+}
+
+type AmsMaterialEntry = { materialId: string; weightGrams: number; name?: string; colorHex?: string }
+
+function parseAmsMaterials(raw: string | null): AmsMaterialEntry[] {
+  if (!raw) return []
+  try { return JSON.parse(raw) } catch { return [] }
 }
 
 type ModelDetail = ModelCard & { calculations: Variant[] }
@@ -261,11 +269,35 @@ function ModelDetailView({ modelId, onBack }: { modelId: string; onBack: () => v
                 <div className="flex items-center gap-2">
                   {v.photoUrl ? (
                     <img src={v.photoUrl} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
-                  ) : v.material?.colorHex ? (
-                    <div className="w-6 h-6 rounded-full border flex-shrink-0" style={{ backgroundColor: v.material.colorHex }} />
-                  ) : null}
+                  ) : (() => {
+                    const ams = parseAmsMaterials(v.amsMaterials)
+                    const amsWithColor = ams.filter(a => a.colorHex)
+                    if (amsWithColor.length > 0) {
+                      return (
+                        <div className="flex -space-x-1.5 flex-shrink-0">
+                          {amsWithColor.slice(0, 4).map((a, i) => (
+                            <div key={i} className="w-6 h-6 rounded-full border-2 border-background"
+                              style={{ backgroundColor: a.colorHex || '#ccc' }}
+                              title={a.name || ''} />
+                          ))}
+                        </div>
+                      )
+                    }
+                    if (v.material?.colorHex) {
+                      return <div className="w-6 h-6 rounded-full border flex-shrink-0" style={{ backgroundColor: v.material.colorHex }} />
+                    }
+                    return null
+                  })()}
                   <div className="flex-1 min-w-0">
-                    {v.material && <p className="font-medium text-sm truncate">{v.material.name}</p>}
+                    {(() => {
+                      const ams = parseAmsMaterials(v.amsMaterials)
+                      if (ams.length > 0) {
+                        const names = ams.map(a => a.name).filter(Boolean)
+                        return <p className="font-medium text-sm truncate">AMS: {names.length > 0 ? names.join(', ') : `${ams.length} матеріал(ів)`}</p>
+                      }
+                      if (v.material) return <p className="font-medium text-sm truncate">{v.material.name}</p>
+                      return null
+                    })()}
                     {v.printer && <p className="text-xs text-muted-foreground">{v.printer.name}</p>}
                   </div>
                 </div>

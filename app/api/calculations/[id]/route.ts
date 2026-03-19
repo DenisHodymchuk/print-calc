@@ -61,8 +61,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     })
   }
 
+  const amsWeightTotal = (amsRaw && amsRaw.length > 0)
+    ? amsRaw.reduce((s: number, a: { weightGrams: string }) => s + (parseFloat(String(a.weightGrams)) || 0), 0)
+    : 0
+
   const costs = calculateCosts({
-    weightGrams: parseFloat(body.weightGrams ?? existing.weightGrams) || 0,
+    weightGrams: amsWeightTotal > 0 ? amsWeightTotal : (parseFloat(body.weightGrams ?? existing.weightGrams) || 0),
     pricePerKg: material?.pricePerKg || 0,
     failureRate: material?.failureRate || 0,
     amsMaterials: amsInputs,
@@ -98,7 +102,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       printerId: body.printerId !== undefined ? body.printerId : existing.printerId,
       materialId: body.materialId !== undefined ? body.materialId : existing.materialId,
       status: body.status ?? existing.status,
-      weightGrams: parseFloat(body.weightGrams ?? existing.weightGrams),
+      weightGrams: (amsRaw && amsRaw.length > 0)
+        ? amsRaw.reduce((s: number, a: { weightGrams: string }) => s + (parseFloat(String(a.weightGrams)) || 0), 0)
+        : parseFloat(body.weightGrams ?? existing.weightGrams),
       printTimeMinutes: parseFloat(body.printTimeMinutes ?? existing.printTimeMinutes),
       layerHeight: parseFloat(body.layerHeight ?? existing.layerHeight),
       infillPercent: parseFloat(body.infillPercent ?? existing.infillPercent),

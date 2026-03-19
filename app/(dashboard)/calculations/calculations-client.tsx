@@ -26,8 +26,16 @@ type Calculation = {
   modelId: string | null
   quoteToken: string | null
   createdAt: string
+  amsMaterials: string | null
   material: { name: string; type: string; colorHex: string | null } | null
   printer: { name: string } | null
+}
+
+type AmsMaterialEntry = { materialId: string; weightGrams: number; name?: string; colorHex?: string }
+
+function parseAmsMaterials(raw: string | null): AmsMaterialEntry[] {
+  if (!raw) return []
+  try { return JSON.parse(raw) } catch { return [] }
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -389,13 +397,29 @@ export function CalculationsClient() {
             <Card key={c.id} className="group hover:shadow-sm transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-center gap-4 flex-wrap">
-                  {/* Photo or color dot */}
+                  {/* Photo or color dot(s) */}
                   {c.photoUrl ? (
                     <img src={c.photoUrl} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-border flex-shrink-0" />
-                  ) : c.material?.colorHex ? (
-                    <div className="w-10 h-10 rounded-full border-2 border-border flex-shrink-0"
-                      style={{ backgroundColor: c.material.colorHex }} />
-                  ) : null}
+                  ) : (() => {
+                    const ams = parseAmsMaterials(c.amsMaterials)
+                    const amsWithColor = ams.filter(a => a.colorHex)
+                    if (amsWithColor.length > 0) {
+                      return (
+                        <div className="flex -space-x-2 flex-shrink-0">
+                          {amsWithColor.slice(0, 4).map((a, i) => (
+                            <div key={i} className="w-8 h-8 rounded-full border-2 border-background"
+                              style={{ backgroundColor: a.colorHex || '#ccc' }}
+                              title={a.name || ''} />
+                          ))}
+                        </div>
+                      )
+                    }
+                    if (c.material?.colorHex) {
+                      return <div className="w-10 h-10 rounded-full border-2 border-border flex-shrink-0"
+                        style={{ backgroundColor: c.material.colorHex }} />
+                    }
+                    return null
+                  })()}
 
                   {/* Main info */}
                   <div className="flex-1 min-w-0">
@@ -404,9 +428,17 @@ export function CalculationsClient() {
                       <StatusDropdown status={c.status} onChangeStatus={(s) => handleStatusChange(c.id, s)} />
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
-                      {c.material && (
-                        <span>{c.material.name} · {c.material.type}</span>
-                      )}
+                      {(() => {
+                        const ams = parseAmsMaterials(c.amsMaterials)
+                        if (ams.length > 0) {
+                          const names = ams.map(a => a.name).filter(Boolean)
+                          return <span>AMS: {names.length > 0 ? names.join(', ') : `${ams.length} матеріал(ів)`}</span>
+                        }
+                        if (c.material) {
+                          return <span>{c.material.name} · {c.material.type}</span>
+                        }
+                        return null
+                      })()}
                       {c.printer && (
                         <span className="flex items-center gap-1">
                           <Printer className="w-3 h-3" />{c.printer.name}

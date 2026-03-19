@@ -29,7 +29,40 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: 'desc' },
   })
 
-  return NextResponse.json(calculations)
+  // Enrich AMS materials with name/colorHex
+  const allAmsMatIds = new Set<string>()
+  for (const c of calculations) {
+    if (c.amsMaterials) {
+      try {
+        const arr = JSON.parse(c.amsMaterials as string) as { materialId: string }[]
+        arr.forEach(a => allAmsMatIds.add(a.materialId))
+      } catch { /* ignore */ }
+    }
+  }
+  let amsMaterialsMap: Record<string, { name: string; type: string; colorHex: string | null }> = {}
+  if (allAmsMatIds.size > 0) {
+    const mats = await prisma.material.findMany({
+      where: { id: { in: Array.from(allAmsMatIds) } },
+      select: { id: true, name: true, type: true, colorHex: true },
+    })
+    amsMaterialsMap = Object.fromEntries(mats.map(m => [m.id, { name: m.name, type: m.type, colorHex: m.colorHex }]))
+  }
+
+  const enriched = calculations.map(c => {
+    if (!c.amsMaterials) return c
+    try {
+      const arr = JSON.parse(c.amsMaterials as string) as { materialId: string; weightGrams: number }[]
+      const enrichedAms = arr.map(a => ({
+        ...a,
+        name: amsMaterialsMap[a.materialId]?.name || null,
+        type: amsMaterialsMap[a.materialId]?.type || null,
+        colorHex: amsMaterialsMap[a.materialId]?.colorHex || null,
+      }))
+      return { ...c, amsMaterials: JSON.stringify(enrichedAms) }
+    } catch { return c }
+  })
+
+  return NextResponse.json(enriched)
 }
 
 export async function POST(req: NextRequest) {
@@ -68,8 +101,12 @@ export async function POST(req: NextRequest) {
     })
   }
 
+  const amsWeightTotal = (amsRaw && amsRaw.length > 0)
+    ? amsRaw.reduce((s: number, a: { weightGrams: string }) => s + (parseFloat(String(a.weightGrams)) || 0), 0)
+    : 0
+
   const costs = calculateCosts({
-    weightGrams: parseFloat(body.weightGrams) || 0,
+    weightGrams: amsWeightTotal > 0 ? amsWeightTotal : (parseFloat(body.weightGrams) || 0),
     pricePerKg: material?.pricePerKg || 0,
     failureRate: material?.failureRate || 0,
     amsMaterials: amsInputs,
@@ -100,7 +137,7 @@ export async function POST(req: NextRequest) {
     printerId: body.printerId || null,
     materialId: body.materialId || null,
     status: body.status || (body.clientName ? 'QUOTED' : 'DRAFT'),
-    weightGrams: parseFloat(body.weightGrams) || 0,
+    weightGrams: amsWeightTotal > 0 ? amsWeightTotal : (parseFloat(body.weightGrams) || 0),
     printTimeMinutes: parseFloat(body.printTimeMinutes) || 0,
     layerHeight: parseFloat(body.layerHeight) || 0.2,
     infillPercent: parseFloat(body.infillPercent) || 15,
