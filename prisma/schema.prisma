@@ -131,6 +131,10 @@ model Calculation {
   quoteToken      String?  @unique
   quoteApprovedAt DateTime?
 
+  // Library / Templates
+  isTemplate Boolean @default(false)
+  category   String?
+
   // Files
   photoUrl   String?
   stlFileUrl String?

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, Trash2, ExternalLink, Copy, Clock, FileText, Printer, Pencil, ChevronDown } from 'lucide-react'
+import { Search, Plus, Trash2, ExternalLink, Copy, Clock, FileText, Printer, Pencil, ChevronDown, BookOpen } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,6 +22,7 @@ type Calculation = {
   printTimeMinutes: number
   clientName: string | null
   photoUrl: string | null
+  isTemplate: boolean
   quoteToken: string | null
   createdAt: string
   material: { name: string; type: string; colorHex: string | null } | null
@@ -199,6 +200,23 @@ export function CalculationsClient() {
     }
   }
 
+  async function handleToggleLibrary(id: string, isTemplate: boolean) {
+    const category = isTemplate ? null : prompt('Категорія (необов\'язково):')
+    const res = await fetch('/api/library', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: isTemplate ? 'remove' : 'add',
+        calculationId: id,
+        category: category || null,
+      }),
+    })
+    if (res.ok) {
+      toast.success(isTemplate ? 'Видалено з бібліотеки' : 'Додано до бібліотеки')
+      fetchCalculations()
+    }
+  }
+
   function copyQuoteLink(token: string) {
     const url = `${window.location.origin}/quote/${token}`
     navigator.clipboard.writeText(url)
@@ -300,6 +318,13 @@ export function CalculationsClient() {
                       onClick={() => router.push(`/calculator?edit=${c.id}`)}
                     >
                       <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon" variant="ghost" className={`h-8 w-8 ${c.isTemplate ? 'text-primary' : ''}`}
+                      title={c.isTemplate ? 'Видалити з бібліотеки' : 'Зберегти в бібліотеку'}
+                      onClick={() => handleToggleLibrary(c.id, c.isTemplate)}
+                    >
+                      <BookOpen className="w-4 h-4" />
                     </Button>
                     {c.quoteToken && (
                       <Button

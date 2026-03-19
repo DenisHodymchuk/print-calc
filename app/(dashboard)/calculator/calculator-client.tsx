@@ -140,6 +140,7 @@ export function CalculatorClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const editId = searchParams.get('edit')
+  const fromId = searchParams.get('from')
   const [materials, setMaterials] = useState<Material[]>([])
   const [printers, setPrinters] = useState<Printer[]>([])
   const [saving, setSaving] = useState(false)
@@ -175,8 +176,9 @@ export function CalculatorClient() {
   }, [])
 
   useEffect(() => {
-    if (!editId) return
-    fetch(`/api/calculations/${editId}`).then(r => r.json()).then(data => {
+    const loadId = editId || fromId
+    if (!loadId) return
+    fetch(`/api/calculations/${loadId}`).then(r => r.json()).then(data => {
       setForm({
         name: data.name || '',
         printerId: data.printerId || '',
@@ -203,7 +205,7 @@ export function CalculatorClient() {
         setShowAdvanced(true)
       }
     })
-  }, [editId])
+  }, [editId, fromId])
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
