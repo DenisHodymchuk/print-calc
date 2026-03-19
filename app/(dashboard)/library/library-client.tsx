@@ -164,7 +164,7 @@ function EditDialog({ template, onClose, onSaved }: { template: Template; onClos
             <Label>Фото</Label>
             {form.photoUrl ? (
               <div className="relative inline-block">
-                <img src={form.photoUrl} alt="Фото" className="h-28 rounded-lg border object-cover" />
+                <img src={form.photoUrl} alt="Фото" className="w-32 h-32 rounded-2xl border-2 border-border object-cover" />
                 <button
                   type="button"
                   onClick={() => setForm(p => ({ ...p, photoUrl: '' }))}
