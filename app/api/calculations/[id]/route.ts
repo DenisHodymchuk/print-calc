@@ -101,6 +101,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       photoUrl: body.photoUrl !== undefined ? (body.photoUrl || null) : existing.photoUrl,
       notes: body.notes !== undefined ? body.notes : existing.notes,
       category: body.category !== undefined ? body.category : existing.category,
+      modelId: body.modelId !== undefined ? body.modelId : existing.modelId,
       ...(body.quoteApproved ? { quoteApprovedAt: new Date(), status: 'APPROVED' } : {}),
       ...(body.postProcessSteps !== undefined ? {
         postProcessSteps: {

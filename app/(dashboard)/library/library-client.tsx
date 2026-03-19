@@ -2,30 +2,41 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, Trash2, FolderOpen, ChevronDown, Tag, Pencil, X, ImagePlus, Save, Package } from 'lucide-react'
+import { Search, Plus, Trash2, FolderOpen, ChevronDown, Tag, Pencil, X, ImagePlus, Save, Package, ArrowLeft, Clock, Printer as PrinterIcon, Calculator } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Printer, Clock } from 'lucide-react'
 
-type Template = {
+type ModelCard = {
   id: string
   name: string
-  category: string | null
+  category: string
   photoUrl: string | null
+  notes: string | null
+  _count: { calculations: number }
+}
+
+type Variant = {
+  id: string
+  name: string
   weightGrams: number
   printTimeMinutes: number
-  copies: number
   sellingPrice: number
   totalCost: number
-  notes: string | null
+  status: string
   createdAt: string
-  updatedAt: string
   material: { name: string; type: string; colorHex: string | null; color: string | null } | null
   printer: { name: string } | null
+}
+
+type ModelDetail = ModelCard & { calculations: Variant[] }
+
+const STATUS_LABELS: Record<string, string> = {
+  DRAFT: 'Чернетка', QUOTED: 'Кошторис', APPROVED: 'Підтверджено',
+  PRINTING: 'Друкується', DONE: 'Готово',
 }
 
 function CategoryDropdown({ value, onChange, categories }: { value: string; onChange: (v: string) => void; categories: string[] }) {
@@ -44,36 +55,23 @@ function CategoryDropdown({ value, onChange, categories }: { value: string; onCh
     return () => document.removeEventListener('mousedown', handle)
   }, [open])
 
-  const label = value === 'all' ? 'Всі категорії' : value
-
   return (
     <div className="relative">
-      <button
-        ref={btnRef}
-        onClick={() => setOpen(o => !o)}
-        className="h-8 rounded-lg border border-input bg-transparent px-3 py-0 text-sm flex items-center gap-1.5 hover:bg-accent transition-colors"
-      >
+      <button ref={btnRef} onClick={() => setOpen(o => !o)}
+        className="h-8 rounded-lg border border-input bg-transparent px-3 py-0 text-sm flex items-center gap-1.5 hover:bg-accent transition-colors">
         <Tag className="w-3.5 h-3.5 text-muted-foreground" />
-        <span>{label}</span>
+        <span>{value === 'all' ? 'Всі категорії' : value}</span>
         <ChevronDown className="w-4 h-4 text-muted-foreground ml-1" />
       </button>
       {open && (
-        <div
-          ref={popupRef}
-          className="absolute top-full left-0 mt-1 z-50 rounded-lg border border-input bg-white shadow-lg overflow-hidden min-w-[160px]"
-        >
-          <button
-            onClick={() => { onChange('all'); setOpen(false) }}
-            className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${value === 'all' ? 'bg-accent font-medium' : ''}`}
-          >
+        <div ref={popupRef} className="absolute top-full left-0 mt-1 z-50 rounded-lg border border-input bg-white shadow-lg overflow-hidden min-w-[160px]">
+          <button onClick={() => { onChange('all'); setOpen(false) }}
+            className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${value === 'all' ? 'bg-accent font-medium' : ''}`}>
             Всі категорії
           </button>
           {categories.map(c => (
-            <button
-              key={c}
-              onClick={() => { onChange(c); setOpen(false) }}
-              className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${c === value ? 'bg-accent font-medium' : ''}`}
-            >
+            <button key={c} onClick={() => { onChange(c); setOpen(false) }}
+              className={`w-full px-3 py-2 text-sm text-left hover:bg-accent ${c === value ? 'bg-accent font-medium' : ''}`}>
               {c}
             </button>
           ))}
@@ -83,12 +81,12 @@ function CategoryDropdown({ value, onChange, categories }: { value: string; onCh
   )
 }
 
-function EditDialog({ template, onClose, onSaved }: { template: Template; onClose: () => void; onSaved: () => void }) {
+function ModelFormDialog({ model, onClose, onSaved }: { model?: ModelCard | null; onClose: () => void; onSaved: () => void }) {
   const [form, setForm] = useState({
-    name: template.name,
-    category: template.category || '',
-    notes: template.notes || '',
-    photoUrl: template.photoUrl || '',
+    name: model?.name || '',
+    category: model?.category || '',
+    notes: model?.notes || '',
+    photoUrl: model?.photoUrl || '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -119,10 +117,12 @@ function EditDialog({ template, onClose, onSaved }: { template: Template; onClos
     if (!form.name.trim()) { toast.error('Введіть назву'); return }
     if (!form.category.trim()) { toast.error('Введіть категорію'); return }
     setSaving(true)
-    const res = await fetch(`/api/calculations/${template.id}`, {
-      method: 'PATCH',
+    const res = await fetch('/api/library', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        action: model ? 'update' : 'create',
+        ...(model ? { modelId: model.id } : {}),
         name: form.name,
         category: form.category,
         notes: form.notes,
@@ -130,27 +130,21 @@ function EditDialog({ template, onClose, onSaved }: { template: Template; onClos
       }),
     })
     setSaving(false)
-    if (res.ok) {
-      toast.success('Збережено')
-      onSaved()
-      onClose()
-    } else {
-      toast.error('Помилка збереження')
-    }
+    if (res.ok) { toast.success(model ? 'Збережено' : 'Модель створено'); onSaved(); onClose() }
+    else toast.error('Помилка')
   }
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/50" onClick={onClose}>
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
-          <h3 className="font-bold text-lg">Редагувати модель</h3>
+          <h3 className="font-bold text-lg">{model ? 'Редагувати модель' : 'Нова модель'}</h3>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="w-5 h-5" /></button>
         </div>
-
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label>Назва *</Label>
-            <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+            <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Дракон, Ваза..." />
           </div>
           <div className="space-y-1.5">
             <Label>Категорія *</Label>
@@ -164,30 +158,24 @@ function EditDialog({ template, onClose, onSaved }: { template: Template; onClos
             <Label>Фото</Label>
             {form.photoUrl ? (
               <div className="relative inline-block">
-                <img src={form.photoUrl} alt="Фото" className="w-32 h-32 rounded-2xl border-2 border-border object-cover" />
-                <button
-                  type="button"
-                  onClick={() => setForm(p => ({ ...p, photoUrl: '' }))}
-                  className="absolute -top-2 -right-2 bg-destructive text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                >
+                <img src={form.photoUrl} alt="" className="w-32 h-32 rounded-2xl border-2 border-border object-cover" />
+                <button onClick={() => setForm(p => ({ ...p, photoUrl: '' }))}
+                  className="absolute -top-2 -right-2 bg-destructive text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
                   <X className="w-3 h-3" />
                 </button>
               </div>
             ) : (
               <label className="flex items-center gap-2 cursor-pointer text-sm text-muted-foreground border border-dashed border-input rounded-lg px-4 py-3 hover:bg-accent/50 transition-colors">
-                <ImagePlus className="w-4 h-4" />
-                Завантажити фото
+                <ImagePlus className="w-4 h-4" /> Завантажити фото
                 <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
               </label>
             )}
           </div>
         </div>
-
         <div className="flex gap-2 pt-2">
           <Button variant="outline" onClick={onClose} className="flex-1">Скасувати</Button>
           <Button onClick={handleSave} disabled={saving} className="flex-1 gap-2">
-            <Save className="w-4 h-4" />
-            {saving ? 'Збереження...' : 'Зберегти'}
+            <Save className="w-4 h-4" /> {saving ? 'Збереження...' : 'Зберегти'}
           </Button>
         </div>
       </div>
@@ -195,23 +183,135 @@ function EditDialog({ template, onClose, onSaved }: { template: Template; onClos
   )
 }
 
-export function LibraryClient() {
+// Model detail view — shows variants
+function ModelDetailView({ modelId, onBack }: { modelId: string; onBack: () => void }) {
   const router = useRouter()
-  const [templates, setTemplates] = useState<Template[]>([])
+  const [model, setModel] = useState<ModelDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/library/${modelId}`).then(r => r.json()).then(d => { setModel(d); setLoading(false) })
+  }, [modelId])
+
+  async function handleUnlink(calcId: string) {
+    const res = await fetch('/api/library', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'unlink', calculationId: calcId }),
+    })
+    if (res.ok) {
+      toast.success('Варіант відв\'язано')
+      fetch(`/api/library/${modelId}`).then(r => r.json()).then(setModel)
+    }
+  }
+
+  function formatTime(minutes: number) {
+    const h = Math.floor(minutes / 60)
+    const m = Math.round(minutes % 60)
+    return h > 0 ? `${h}г ${m}хв` : `${m}хв`
+  }
+
+  if (loading) return <p className="p-6 text-muted-foreground">Завантаження...</p>
+  if (!model) return <p className="p-6 text-muted-foreground">Модель не знайдена</p>
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="w-5 h-5" /></Button>
+        <div className="flex items-center gap-4 flex-1">
+          {model.photoUrl ? (
+            <img src={model.photoUrl} alt="" className="w-16 h-16 rounded-2xl object-cover border" />
+          ) : (
+            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
+              <Package className="w-6 h-6 text-muted-foreground" />
+            </div>
+          )}
+          <div>
+            <h2 className="font-bold text-xl">{model.name}</h2>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge variant="outline" className="text-xs">{model.category}</Badge>
+              <span className="text-sm text-muted-foreground">{model.calculations.length} варіант(ів)</span>
+            </div>
+          </div>
+        </div>
+        <Button onClick={() => router.push(`/calculator?modelId=${model.id}`)} className="gap-2">
+          <Plus className="w-4 h-4" /> Новий розрахунок
+        </Button>
+      </div>
+
+      {/* Variants */}
+      {model.calculations.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <Calculator className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p className="text-lg mb-2">Варіантів ще немає</p>
+          <p className="text-sm">Додайте розрахунок до цієї моделі з калькулятора або розрахунків</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {model.calculations.map(v => (
+            <Card key={v.id} className="hover:shadow-sm transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  {v.material?.colorHex && (
+                    <div className="w-8 h-8 rounded-full border-2 flex-shrink-0" style={{ backgroundColor: v.material.colorHex }} />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {v.material && <span className="font-medium text-sm">{v.material.name}</span>}
+                      {v.printer && <span className="text-xs text-muted-foreground flex items-center gap-1"><PrinterIcon className="w-3 h-3" />{v.printer.name}</span>}
+                      <Badge variant="secondary" className="text-xs">{STATUS_LABELS[v.status] || v.status}</Badge>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                      <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{formatTime(v.printTimeMinutes)}</span>
+                      <span>{v.weightGrams}г</span>
+                      <span>{new Date(v.createdAt).toLocaleDateString('uk-UA')}</span>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="font-bold">{v.sellingPrice.toFixed(0)} ₴</p>
+                    <p className="text-xs text-muted-foreground">собівартість: {v.totalCost.toFixed(0)} ₴</p>
+                  </div>
+                  <div className="flex gap-1 flex-shrink-0">
+                    <Button size="icon" variant="ghost" className="h-8 w-8" title="Новий розрахунок з цього" onClick={() => router.push(`/calculator?from=${v.id}&modelId=${model.id}`)}>
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8" title="Редагувати" onClick={() => router.push(`/calculator?edit=${v.id}`)}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-8 w-8 hover:text-destructive" title="Відв'язати" onClick={() => handleUnlink(v.id)}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function LibraryClient() {
+  const [models, setModels] = useState<ModelCard[]>([])
   const [categories, setCategories] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filterCategory, setFilterCategory] = useState('all')
-  const [editTemplate, setEditTemplate] = useState<Template | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [editModel, setEditModel] = useState<ModelCard | null>(null)
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null)
 
-  const fetchTemplates = useCallback(async () => {
+  const fetchModels = useCallback(async () => {
     setLoading(true)
     const params = new URLSearchParams()
     if (filterCategory !== 'all') params.set('category', filterCategory)
     if (search) params.set('search', search)
     const res = await fetch(`/api/library?${params}`)
     const data = await res.json()
-    setTemplates(data)
+    setModels(data)
     setLoading(false)
   }, [filterCategory, search])
 
@@ -226,127 +326,83 @@ export function LibraryClient() {
   }, [])
 
   useEffect(() => { fetchCategories() }, [fetchCategories])
-
   useEffect(() => {
-    const t = setTimeout(fetchTemplates, 300)
+    const t = setTimeout(fetchModels, 300)
     return () => clearTimeout(t)
-  }, [fetchTemplates])
+  }, [fetchModels])
 
-  async function handleRemove(id: string) {
-    if (!confirm('Видалити з бібліотеки?')) return
+  async function handleDelete(id: string) {
+    if (!confirm('Видалити модель з бібліотеки?')) return
     const res = await fetch('/api/library', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'remove', calculationId: id }),
+      body: JSON.stringify({ action: 'delete', modelId: id }),
     })
-    if (res.ok) {
-      toast.success('Видалено з бібліотеки')
-      fetchTemplates()
-      fetchCategories()
-    }
+    if (res.ok) { toast.success('Модель видалено'); fetchModels(); fetchCategories() }
   }
 
-  function formatTime(minutes: number) {
-    const h = Math.floor(minutes / 60)
-    const m = Math.round(minutes % 60)
-    return h > 0 ? `${h}г ${m}хв` : `${m}хв`
-  }
+  function handleSaved() { fetchModels(); fetchCategories() }
 
-  function handleSaved() {
-    fetchTemplates()
-    fetchCategories()
+  // Show detail view
+  if (selectedModelId) {
+    return <ModelDetailView modelId={selectedModelId} onBack={() => setSelectedModelId(null)} />
   }
 
   return (
     <div className="p-6 space-y-6">
       {/* Toolbar */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative max-w-xs flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Пошук моделі..."
-            className="pl-9"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+      <div className="flex flex-wrap gap-3 items-center justify-between">
+        <div className="flex gap-3 flex-wrap flex-1">
+          <div className="relative max-w-xs flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Пошук моделі..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+          <CategoryDropdown value={filterCategory} onChange={setFilterCategory} categories={categories} />
         </div>
-        <CategoryDropdown value={filterCategory} onChange={setFilterCategory} categories={categories} />
+        <Button onClick={() => { setEditModel(null); setShowForm(true) }} className="gap-2">
+          <Plus className="w-4 h-4" /> Нова модель
+        </Button>
       </div>
 
       {loading ? (
         <p className="text-muted-foreground">Завантаження...</p>
-      ) : templates.length === 0 ? (
+      ) : models.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <FolderOpen className="w-12 h-12 mx-auto mb-4 opacity-30" />
           <p className="text-lg mb-2">Бібліотека порожня</p>
-          <p className="text-sm mb-4">Збережіть модель з розрахунків щоб вона з&apos;явилась тут</p>
-          <Button onClick={() => router.push('/calculations')} variant="outline" className="gap-2">
-            Перейти до розрахунків
-          </Button>
+          <p className="text-sm mb-4">Створіть першу модель і додайте до неї розрахунки</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {templates.map(t => (
-            <Card key={t.id} className="group hover:shadow-md transition-shadow overflow-hidden">
-              <CardContent className="p-0">
-                <div className="flex">
-                  {/* Photo left */}
-                  {t.photoUrl ? (
-                    <div className="flex-shrink-0 p-3">
-                      <img src={t.photoUrl} alt={t.name} className="w-28 h-28 object-cover rounded-2xl" />
-                    </div>
-                  ) : (
-                    <div className="flex-shrink-0 p-3">
-                      <div className="w-28 h-28 rounded-2xl flex items-center justify-center" style={{ backgroundColor: t.material?.colorHex || '#e5e5e0' }}>
-                        <Package className="w-8 h-8 text-white/50" />
-                      </div>
-                    </div>
-                  )}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {models.map(m => (
+            <Card key={m.id} className="group hover:shadow-md transition-shadow overflow-hidden cursor-pointer" onClick={() => setSelectedModelId(m.id)}>
+              {/* Photo */}
+              {m.photoUrl ? (
+                <div className="aspect-square overflow-hidden">
+                  <img src={m.photoUrl} alt={m.name} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="aspect-square flex items-center justify-center bg-muted">
+                  <Package className="w-12 h-12 text-muted-foreground/30" />
+                </div>
+              )}
 
-                  {/* Content right */}
-                  <div className="flex-1 p-3 flex flex-col justify-between gap-1.5">
-                    {/* Title + category */}
-                    <div>
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="font-bold text-sm leading-tight">{t.name}</p>
-                        {t.category && <Badge variant="outline" className="text-[10px] flex-shrink-0">{t.category}</Badge>}
-                      </div>
-                      {t.material && (
-                        <p className="text-xs text-muted-foreground mt-0.5">{t.material.name}</p>
-                      )}
-                    </div>
-
-                    {/* Details */}
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-                      {t.printer && (
-                        <span className="flex items-center gap-1">
-                          <Printer className="w-3 h-3" /> {t.printer.name}
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {formatTime(t.printTimeMinutes)}
-                      </span>
-                      <span>{t.weightGrams}г</span>
-                    </div>
-
-                    {/* Price + actions */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-bold text-sm">{t.sellingPrice.toFixed(0)} ₴</span>
-                        <span className="text-[10px] text-muted-foreground ml-1">собівартість: {t.totalCost.toFixed(0)} ₴</span>
-                      </div>
-                      <div className="flex gap-0.5">
-                        <Button size="icon" variant="ghost" className="h-6 w-6" title="Редагувати" onClick={() => setEditTemplate(t)}>
-                          <Pencil className="w-3 h-3" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-6 w-6" title="Новий розрахунок" onClick={() => router.push(`/calculator?from=${t.id}`)}>
-                          <Plus className="w-3 h-3" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-6 w-6 hover:text-destructive" title="Видалити" onClick={() => handleRemove(t.id)}>
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </div>
+              <CardContent className="p-3">
+                <div className="flex items-start justify-between gap-1">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm truncate">{m.name}</p>
+                    <p className="text-xs text-muted-foreground">{m.category}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-xs text-muted-foreground">{m._count.calculations} варіант(ів)</span>
+                  <div className="flex gap-0.5" onClick={e => e.stopPropagation()}>
+                    <Button size="icon" variant="ghost" className="h-6 w-6" title="Редагувати" onClick={() => { setEditModel(m); setShowForm(true) }}>
+                      <Pencil className="w-3 h-3" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-6 w-6 hover:text-destructive" title="Видалити" onClick={() => handleDelete(m.id)}>
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -355,8 +411,8 @@ export function LibraryClient() {
         </div>
       )}
 
-      {editTemplate && (
-        <EditDialog template={editTemplate} onClose={() => setEditTemplate(null)} onSaved={handleSaved} />
+      {showForm && (
+        <ModelFormDialog model={editModel} onClose={() => setShowForm(false)} onSaved={handleSaved} />
       )}
     </div>
   )

@@ -141,6 +141,7 @@ export function CalculatorClient() {
   const searchParams = useSearchParams()
   const editId = searchParams.get('edit')
   const fromId = searchParams.get('from')
+  const modelId = searchParams.get('modelId')
   const [materials, setMaterials] = useState<Material[]>([])
   const [printers, setPrinters] = useState<Printer[]>([])
   const [saving, setSaving] = useState(false)
@@ -289,7 +290,7 @@ export function CalculatorClient() {
     const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, postProcessSteps: postSteps }),
+      body: JSON.stringify({ ...form, postProcessSteps: postSteps, ...(modelId ? { modelId } : {}) }),
     })
     setSaving(false)
     if (res.ok) {

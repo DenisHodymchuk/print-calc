@@ -103,6 +103,7 @@ export async function POST(req: NextRequest) {
       clientName: body.clientName || null,
       clientEmail: body.clientEmail || null,
       quoteToken,
+      ...(body.modelId ? { model: { connect: { id: body.modelId } } } : {}),
       photoUrl: body.photoUrl || null,
       notes: body.notes || null,
       postProcessSteps: {
