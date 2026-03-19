@@ -21,6 +21,7 @@ type Calculation = {
   weightGrams: number
   printTimeMinutes: number
   clientName: string | null
+  photoUrl: string | null
   quoteToken: string | null
   createdAt: string
   material: { name: string; type: string; colorHex: string | null } | null
@@ -248,11 +249,13 @@ export function CalculationsClient() {
             <Card key={c.id} className="group hover:shadow-sm transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-center gap-4 flex-wrap">
-                  {/* Color dot */}
-                  {c.material?.colorHex && (
+                  {/* Photo or color dot */}
+                  {c.photoUrl ? (
+                    <img src={c.photoUrl} alt="" className="w-10 h-10 rounded-full object-cover border-2 border-border flex-shrink-0" />
+                  ) : c.material?.colorHex ? (
                     <div className="w-10 h-10 rounded-full border-2 border-border flex-shrink-0"
                       style={{ backgroundColor: c.material.colorHex }} />
-                  )}
+                  ) : null}
 
                   {/* Main info */}
                   <div className="flex-1 min-w-0">

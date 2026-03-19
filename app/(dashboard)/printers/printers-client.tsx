@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Pencil, Trash2, Zap, Clock, Wrench, CircleDollarSign } from 'lucide-react'
+import { Plus, Pencil, Trash2, Zap, Clock, Wrench, CircleDollarSign, Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PrinterDialog } from './printer-dialog'
 
@@ -23,6 +24,7 @@ export function PrintersClient() {
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editPrinter, setEditPrinter] = useState<Printer | null>(null)
+  const [search, setSearch] = useState('')
   // Ціна кВт·год береться з профілю — тимчасово 4.32 ₴
   const electricityRate = 4.32
 
@@ -63,11 +65,22 @@ export function PrintersClient() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">
-          Ціна електроенергії: <span className="font-medium">{electricityRate} ₴/кВт·год</span>
-          <span className="ml-2 text-xs">(змінюється у Налаштуваннях)</span>
-        </p>
+      <div className="flex flex-wrap gap-3 justify-between items-center">
+        <div className="flex gap-3 flex-wrap flex-1 items-center">
+          <div className="relative max-w-xs flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Пошук за брендом, моделлю..."
+              className="pl-9"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Ціна електроенергії: <span className="font-medium">{electricityRate} ₴/кВт·год</span>
+            <span className="ml-2 text-xs">(Налаштування)</span>
+          </p>
+        </div>
         <Button onClick={() => { setEditPrinter(null); setDialogOpen(true) }} className="gap-2">
           <Plus className="w-4 h-4" /> Додати принтер
         </Button>
@@ -82,7 +95,11 @@ export function PrintersClient() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {printers.map((p) => {
+          {printers.filter(p => {
+            if (!search) return true
+            const q = search.toLowerCase()
+            return p.name.toLowerCase().includes(q) || (p.brand || '').toLowerCase().includes(q)
+          }).map((p) => {
             const costPerHour = calcCostPerHour(p)
             const roiHours = calcRoiHours(p)
             return (
