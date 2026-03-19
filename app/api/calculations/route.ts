@@ -55,10 +55,24 @@ export async function POST(req: NextRequest) {
     (sum: number, s: { materialCost?: number }) => sum + (s.materialCost || 0), 0
   )
 
+  // AMS: resolve multiple materials
+  let amsInputs = undefined
+  const amsRaw = body.amsMaterials as { materialId: string; weightGrams: string }[] | undefined
+  if (amsRaw && Array.isArray(amsRaw) && amsRaw.length > 0) {
+    const amsMats = await prisma.material.findMany({
+      where: { id: { in: amsRaw.map(a => a.materialId) }, userId: session.user.id },
+    })
+    amsInputs = amsRaw.map(a => {
+      const mat = amsMats.find(m => m.id === a.materialId)
+      return { weightGrams: parseFloat(String(a.weightGrams)) || 0, pricePerKg: mat?.pricePerKg || 0, failureRate: mat?.failureRate || 0 }
+    })
+  }
+
   const costs = calculateCosts({
     weightGrams: parseFloat(body.weightGrams) || 0,
     pricePerKg: material?.pricePerKg || 0,
     failureRate: material?.failureRate || 0,
+    amsMaterials: amsInputs,
     printTimeMinutes: parseFloat(body.printTimeMinutes) || 0,
     purchasePrice: printer?.purchasePrice || 0,
     lifetimeHours: printer?.lifetimeHours || 2000,
@@ -80,40 +94,44 @@ export async function POST(req: NextRequest) {
 
   const quoteToken = crypto.randomBytes(16).toString('hex')
 
-  const calculation = await prisma.calculation.create({
-    data: {
-      userId: session.user.id,
-      name: body.name || 'Новий розрахунок',
-      printerId: body.printerId || null,
-      materialId: body.materialId || null,
-      status: body.status || (body.clientName ? 'QUOTED' : 'DRAFT'),
-      weightGrams: parseFloat(body.weightGrams) || 0,
-      printTimeMinutes: parseFloat(body.printTimeMinutes) || 0,
-      layerHeight: parseFloat(body.layerHeight) || 0.2,
-      infillPercent: parseFloat(body.infillPercent) || 15,
-      hasSupports: body.hasSupports || false,
-      supportDensity: parseFloat(body.supportDensity) || 15,
-      copies: parseInt(body.copies) || 1,
-      setupMinutes: parseFloat(body.setupMinutes) || 15,
-      postProcMinutes: parseFloat(body.postProcMinutes) || 0,
-      ...costs,
-      marginPercent: parseFloat(body.marginPercent) || 30,
-      discountPercent: parseFloat(body.discountPercent) || 0,
-      sellingPrice,
-      clientName: body.clientName || null,
-      clientEmail: body.clientEmail || null,
-      quoteToken,
-      modelId: body.modelId || null,
-      photoUrl: body.photoUrl || null,
-      notes: body.notes || null,
-      postProcessSteps: {
-        create: (body.postProcessSteps || []).map((s: { name: string; timeMinutes: number; materialCost: number }) => ({
-          name: s.name,
-          timeMinutes: s.timeMinutes || 0,
-          materialCost: s.materialCost || 0,
-        })),
-      },
+  const calcData = {
+    userId: session.user.id,
+    name: body.name || 'Новий розрахунок',
+    printerId: body.printerId || null,
+    materialId: body.materialId || null,
+    status: body.status || (body.clientName ? 'QUOTED' : 'DRAFT'),
+    weightGrams: parseFloat(body.weightGrams) || 0,
+    printTimeMinutes: parseFloat(body.printTimeMinutes) || 0,
+    layerHeight: parseFloat(body.layerHeight) || 0.2,
+    infillPercent: parseFloat(body.infillPercent) || 15,
+    hasSupports: body.hasSupports || false,
+    supportDensity: parseFloat(body.supportDensity) || 15,
+    copies: parseInt(body.copies) || 1,
+    setupMinutes: parseFloat(body.setupMinutes) || 15,
+    postProcMinutes: parseFloat(body.postProcMinutes) || 0,
+    ...costs,
+    marginPercent: parseFloat(body.marginPercent) || 30,
+    discountPercent: parseFloat(body.discountPercent) || 0,
+    sellingPrice,
+    clientName: body.clientName || null,
+    clientEmail: body.clientEmail || null,
+    quoteToken,
+    modelId: body.modelId || null,
+    amsMaterials: amsRaw ? JSON.stringify(amsRaw.map((a: { materialId: string; weightGrams: string }) => ({ materialId: a.materialId, weightGrams: parseFloat(String(a.weightGrams)) || 0 }))) : null,
+    photoUrl: body.photoUrl || null,
+    notes: body.notes || null,
+    postProcessSteps: {
+      create: (body.postProcessSteps || []).map((s: { name: string; timeMinutes: number; materialCost: number }) => ({
+        name: s.name,
+        timeMinutes: s.timeMinutes || 0,
+        materialCost: s.materialCost || 0,
+      })),
     },
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const calculation = await prisma.calculation.create({
+    data: calcData as any,
     include: { postProcessSteps: true },
   })
 

@@ -1,8 +1,15 @@
-export interface CostInputs {
-  // Material
+export interface MaterialInput {
   weightGrams: number
   pricePerKg: number
   failureRate: number // 0-1
+}
+
+export interface CostInputs {
+  // Material (single or AMS multi-material)
+  weightGrams: number
+  pricePerKg: number
+  failureRate: number // 0-1
+  amsMaterials?: MaterialInput[] // if provided, overrides single material
 
   // Machine
   printTimeMinutes: number
@@ -45,7 +52,14 @@ export function calculateCosts(inputs: CostInputs): CostBreakdown {
   const laborHours = (setupMinutes + postProcMinutes) / 60
 
   // Material cost per unit (with failure rate buffer)
-  const materialCostPerUnit = (weightGrams / 1000) * pricePerKg * (1 + failureRate)
+  // AMS: sum costs from multiple materials; single: use single material
+  let materialCostPerUnit: number
+  if (inputs.amsMaterials && inputs.amsMaterials.length > 0) {
+    materialCostPerUnit = inputs.amsMaterials.reduce((sum, m) =>
+      sum + (m.weightGrams / 1000) * m.pricePerKg * (1 + m.failureRate), 0)
+  } else {
+    materialCostPerUnit = (weightGrams / 1000) * pricePerKg * (1 + failureRate)
+  }
 
   // Machine cost per unit
   const depreciationPerHour = lifetimeHours > 0 ? purchasePrice / lifetimeHours : 0

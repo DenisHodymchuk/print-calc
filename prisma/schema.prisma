@@ -137,6 +137,9 @@ model Calculation {
   category   String?
   modelId    String?
 
+  // AMS multi-material (JSON: [{materialId, weightGrams}])
+  amsMaterials String?
+
   // Files
   photoUrl   String?
   stlFileUrl String?

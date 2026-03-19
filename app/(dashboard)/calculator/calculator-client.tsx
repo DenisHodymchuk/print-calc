@@ -16,6 +16,7 @@ import { calculateCosts, calculateSellingPrice } from '@/lib/cost-calculator'
 type Material = { id: string; name: string; brand: string | null; type: string; color: string | null; colorHex: string | null; pricePerKg: number; density: number; failureRate: number }
 type Printer = { id: string; name: string; brand: string | null; purchasePrice: number; powerWatts: number; lifetimeHours: number; maintenanceReservePerHour: number }
 type PostStep = { name: string; timeMinutes: number; materialCost: number }
+type AmsMaterial = { materialId: string; weightGrams: string }
 
 function useDropdownPos(open: boolean) {
   const btnRef = useRef<HTMLButtonElement>(null)
@@ -168,6 +169,8 @@ export function CalculatorClient() {
     photoUrl: '',
   })
   const [postSteps, setPostSteps] = useState<PostStep[]>([])
+  const [useAms, setUseAms] = useState(false)
+  const [amsMaterials, setAmsMaterials] = useState<AmsMaterial[]>([{ materialId: '', weightGrams: '' }])
   const [electricityRate] = useState(4.32)
   const [hourlyRate] = useState(0)
 
@@ -205,6 +208,15 @@ export function CalculatorClient() {
       if (data.hasSupports || data.layerHeight !== 0.2 || data.infillPercent !== 15) {
         setShowAdvanced(true)
       }
+      if (data.amsMaterials) {
+        try {
+          const ams = JSON.parse(data.amsMaterials)
+          if (Array.isArray(ams) && ams.length > 0) {
+            setUseAms(true)
+            setAmsMaterials(ams.map((a: { materialId: string; weightGrams: number }) => ({ materialId: a.materialId, weightGrams: String(a.weightGrams) })))
+          }
+        } catch { /* ignore */ }
+      }
     })
   }, [editId, fromId])
 
@@ -240,10 +252,15 @@ export function CalculatorClient() {
 
   const costs = useMemo(() => {
     const postStepsCost = postSteps.reduce((s, ps) => s + (ps.materialCost || 0), 0)
+    const amsInputs = useAms ? amsMaterials.filter(am => am.materialId && am.weightGrams).map(am => {
+      const mat = materials.find(m => m.id === am.materialId)
+      return { weightGrams: parseFloat(am.weightGrams) || 0, pricePerKg: mat?.pricePerKg || 0, failureRate: mat?.failureRate || 0 }
+    }) : undefined
     return calculateCosts({
       weightGrams: parseFloat(form.weightGrams) || 0,
       pricePerKg: selectedMaterial?.pricePerKg || 0,
       failureRate: selectedMaterial?.failureRate || 0,
+      amsMaterials: amsInputs,
       printTimeMinutes: parseFloat(form.printTimeMinutes) || 0,
       purchasePrice: selectedPrinter?.purchasePrice || 0,
       lifetimeHours: selectedPrinter?.lifetimeHours || 2000,
@@ -256,7 +273,7 @@ export function CalculatorClient() {
       postProcessStepsCost: postStepsCost,
       copies: parseInt(form.copies) || 1,
     })
-  }, [form, selectedMaterial, selectedPrinter, postSteps, electricityRate, hourlyRate])
+  }, [form, selectedMaterial, selectedPrinter, postSteps, electricityRate, hourlyRate, useAms, amsMaterials, materials])
 
   const sellingPrice = useMemo(() =>
     calculateSellingPrice(costs.totalCost, parseFloat(form.marginPercent) || 30, parseFloat(form.discountPercent) || 0),
@@ -290,7 +307,12 @@ export function CalculatorClient() {
     const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, postProcessSteps: postSteps, ...(modelId ? { modelId } : {}) }),
+      body: JSON.stringify({
+        ...form,
+        postProcessSteps: postSteps,
+        ...(modelId ? { modelId } : {}),
+        ...(useAms ? { amsMaterials: amsMaterials.filter(am => am.materialId && am.weightGrams) } : {}),
+      }),
     })
     setSaving(false)
     if (res.ok) {
@@ -325,15 +347,68 @@ export function CalculatorClient() {
                     onChange={v => setForm(p => ({ ...p, printerId: v }))}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Пластик</Label>
-                  <MaterialSelect
-                    materials={materials}
-                    value={form.materialId}
-                    onChange={v => setForm(p => ({ ...p, materialId: v }))}
-                  />
-                </div>
+                {!useAms && (
+                  <div className="space-y-2">
+                    <Label>Пластик</Label>
+                    <MaterialSelect
+                      materials={materials}
+                      value={form.materialId}
+                      onChange={v => setForm(p => ({ ...p, materialId: v }))}
+                    />
+                  </div>
+                )}
               </div>
+
+              {/* AMS toggle */}
+              <div className="flex items-center gap-3">
+                <div className="flex rounded-lg border border-input overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setUseAms(false)}
+                    className={`text-xs px-3 py-1.5 transition-colors ${!useAms ? 'bg-primary text-white' : 'bg-transparent text-foreground hover:bg-accent'}`}
+                  >1 пластик</button>
+                  <button
+                    type="button"
+                    onClick={() => setUseAms(true)}
+                    className={`text-xs px-3 py-1.5 border-l border-input transition-colors ${useAms ? 'bg-primary text-white' : 'bg-transparent text-foreground hover:bg-accent'}`}
+                  >AMS (кілька)</button>
+                </div>
+                {useAms && <span className="text-xs text-muted-foreground">Мультикольоровий друк</span>}
+              </div>
+
+              {/* AMS materials */}
+              {useAms && (
+                <div className="space-y-3">
+                  <Label>Пластики AMS</Label>
+                  {amsMaterials.map((am, i) => (
+                    <div key={i} className="flex gap-2 items-center">
+                      <div className="flex-1">
+                        <MaterialSelect
+                          materials={materials}
+                          value={am.materialId}
+                          onChange={v => setAmsMaterials(prev => prev.map((m, idx) => idx === i ? { ...m, materialId: v } : m))}
+                        />
+                      </div>
+                      <Input
+                        type="number" min="0" placeholder="Вага (г)"
+                        value={am.weightGrams}
+                        onChange={e => setAmsMaterials(prev => prev.map((m, idx) => idx === i ? { ...m, weightGrams: e.target.value } : m))}
+                        className="w-28"
+                      />
+                      {amsMaterials.length > 1 && (
+                        <Button size="icon" variant="ghost" className="h-9 w-9 hover:text-destructive flex-shrink-0" type="button"
+                          onClick={() => setAmsMaterials(prev => prev.filter((_, idx) => idx !== i))}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button size="sm" variant="outline" type="button" className="gap-1"
+                    onClick={() => setAmsMaterials(prev => [...prev, { materialId: '', weightGrams: '' }])}>
+                    <Plus className="w-3 h-3" /> Додати пластик
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -342,10 +417,12 @@ export function CalculatorClient() {
             <CardHeader><CardTitle className="text-base">Параметри друку</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Вага (г)</Label>
-                  <Input name="weightGrams" type="number" min="0" value={form.weightGrams} onChange={handleChange} placeholder="45" />
-                </div>
+                {!useAms && (
+                  <div className="space-y-2">
+                    <Label>Вага (г)</Label>
+                    <Input name="weightGrams" type="number" min="0" value={form.weightGrams} onChange={handleChange} placeholder="45" />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>Час друку (хв)</Label>
                   <Input name="printTimeMinutes" type="number" min="0" value={form.printTimeMinutes} onChange={handleChange} placeholder="240" />

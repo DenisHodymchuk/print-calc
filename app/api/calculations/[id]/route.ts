@@ -48,10 +48,24 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     (sum: number, s: { materialCost?: number }) => sum + (s.materialCost || 0), 0
   )
 
+  // AMS materials
+  let amsInputs = undefined
+  const amsRaw = body.amsMaterials as { materialId: string; weightGrams: string }[] | undefined
+  if (amsRaw && Array.isArray(amsRaw) && amsRaw.length > 0) {
+    const amsMats = await prisma.material.findMany({
+      where: { id: { in: amsRaw.map(a => a.materialId) }, userId: session.user.id },
+    })
+    amsInputs = amsRaw.map(a => {
+      const mat = amsMats.find(m => m.id === a.materialId)
+      return { weightGrams: parseFloat(String(a.weightGrams)) || 0, pricePerKg: mat?.pricePerKg || 0, failureRate: mat?.failureRate || 0 }
+    })
+  }
+
   const costs = calculateCosts({
     weightGrams: parseFloat(body.weightGrams ?? existing.weightGrams) || 0,
     pricePerKg: material?.pricePerKg || 0,
     failureRate: material?.failureRate || 0,
+    amsMaterials: amsInputs,
     printTimeMinutes: parseFloat(body.printTimeMinutes ?? existing.printTimeMinutes) || 0,
     purchasePrice: printer?.purchasePrice || 0,
     lifetimeHours: printer?.lifetimeHours || 2000,
@@ -76,9 +90,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     await prisma.postProcessingStep.deleteMany({ where: { calculationId: id } })
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updated = await prisma.calculation.update({
     where: { id },
-    data: {
+    data: ({
       name: body.name ?? existing.name,
       printerId: body.printerId !== undefined ? body.printerId : existing.printerId,
       materialId: body.materialId !== undefined ? body.materialId : existing.materialId,
@@ -102,6 +117,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       notes: body.notes !== undefined ? body.notes : existing.notes,
       category: body.category !== undefined ? body.category : existing.category,
       modelId: body.modelId !== undefined ? body.modelId : existing.modelId,
+      amsMaterials: amsRaw ? JSON.stringify(amsRaw.map((a: { materialId: string; weightGrams: string }) => ({ materialId: a.materialId, weightGrams: parseFloat(String(a.weightGrams)) || 0 }))) : (body.amsMaterials === null ? null : undefined),
       ...(body.quoteApproved ? { quoteApprovedAt: new Date(), status: 'APPROVED' } : {}),
       ...(body.postProcessSteps !== undefined ? {
         postProcessSteps: {
@@ -112,7 +128,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           })),
         },
       } : {}),
-    },
+    }) as any,
     include: { postProcessSteps: true },
   })
 
