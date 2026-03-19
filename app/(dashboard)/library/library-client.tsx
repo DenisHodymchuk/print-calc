@@ -292,12 +292,12 @@ export function LibraryClient() {
                 <div className="flex">
                   {/* Photo left */}
                   {t.photoUrl ? (
-                    <div className="w-28 flex-shrink-0 p-3">
-                      <img src={t.photoUrl} alt={t.name} className="w-full h-24 object-cover rounded-xl" />
+                    <div className="flex-shrink-0 p-3">
+                      <img src={t.photoUrl} alt={t.name} className="w-28 h-28 object-cover rounded-2xl" />
                     </div>
                   ) : (
-                    <div className="w-28 flex-shrink-0 p-3">
-                      <div className="w-full h-24 rounded-xl flex items-center justify-center" style={{ backgroundColor: t.material?.colorHex || '#e5e5e0' }}>
+                    <div className="flex-shrink-0 p-3">
+                      <div className="w-28 h-28 rounded-2xl flex items-center justify-center" style={{ backgroundColor: t.material?.colorHex || '#e5e5e0' }}>
                         <Package className="w-8 h-8 text-white/50" />
                       </div>
                     </div>
