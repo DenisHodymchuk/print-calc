@@ -12,7 +12,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     where: { id, userId: session.user.id },
     include: {
       calculations: {
-        include: {
+        select: {
+          id: true, name: true, weightGrams: true, printTimeMinutes: true,
+          materialCost: true, machineCost: true, laborCost: true, overheadCost: true,
+          totalCost: true, sellingPrice: true, marginPercent: true, copies: true,
+          infillPercent: true, layerHeight: true, hasSupports: true,
+          createdAt: true,
           material: { select: { name: true, type: true, colorHex: true, color: true } },
           printer: { select: { name: true } },
         },
