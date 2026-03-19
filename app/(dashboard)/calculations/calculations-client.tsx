@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Plus, Trash2, ExternalLink, Copy, Clock, FileText, Printer, Pencil, ChevronDown, BookOpen } from 'lucide-react'
+import { Search, Plus, Trash2, ExternalLink, Copy, Clock, FileText, Printer, Pencil, ChevronDown, BookOpen, ImagePlus, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -161,7 +161,31 @@ function ModelPickerDialog({ onSelect, onClose }: { onSelect: (modelId: string) 
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
   const [newCategory, setNewCategory] = useState('')
+  const [newPhoto, setNewPhoto] = useState('')
   const [saving, setSaving] = useState(false)
+
+  function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new window.Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const MAX = 800
+        let w = img.width, h = img.height
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX }
+          else { w = Math.round(w * MAX / h); h = MAX }
+        }
+        canvas.width = w; canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+        setNewPhoto(canvas.toDataURL('image/jpeg', 0.7))
+      }
+      img.src = reader.result as string
+    }
+    reader.readAsDataURL(file)
+  }
 
   useEffect(() => {
     fetch('/api/library').then(r => r.json()).then(d => { setModels(d); setLoading(false) })
@@ -173,7 +197,7 @@ function ModelPickerDialog({ onSelect, onClose }: { onSelect: (modelId: string) 
     const res = await fetch('/api/library', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'create', name: newName.trim(), category: newCategory.trim() }),
+      body: JSON.stringify({ action: 'create', name: newName.trim(), category: newCategory.trim(), photoUrl: newPhoto || null }),
     })
     setSaving(false)
     if (res.ok) {
@@ -193,6 +217,20 @@ function ModelPickerDialog({ onSelect, onClose }: { onSelect: (modelId: string) 
           <div className="space-y-3">
             <Input placeholder="Назва моделі" value={newName} onChange={e => setNewName(e.target.value)} />
             <Input placeholder="Категорія (Брелоки, Вази...)" value={newCategory} onChange={e => setNewCategory(e.target.value)} />
+            {newPhoto ? (
+              <div className="relative inline-block">
+                <img src={newPhoto} alt="" className="h-20 rounded-lg border object-cover" />
+                <button onClick={() => setNewPhoto('')}
+                  className="absolute -top-2 -right-2 bg-destructive text-white rounded-full w-5 h-5 flex items-center justify-center">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-muted-foreground border border-dashed border-input rounded-lg px-3 py-2 hover:bg-accent/50 transition-colors">
+                <ImagePlus className="w-4 h-4" /> Додати фото
+                <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+              </label>
+            )}
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setCreating(false)} className="flex-1">Назад</Button>
               <Button onClick={handleCreate} disabled={saving} className="flex-1">
