@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       type: type || 'PLA',
       pricePerKg: parseFloat(pricePerKg),
       density: density ? parseFloat(density) : 1.24,
-      failureRate: failureRate ? parseFloat(failureRate) : 0.05,
+      failureRate: failureRate !== undefined && failureRate !== null ? parseFloat(failureRate) : 0.05,
       notes,
     },
   })

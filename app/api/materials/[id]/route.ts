@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       type: body.type,
       pricePerKg: body.pricePerKg ? parseFloat(body.pricePerKg) : undefined,
       density: body.density ? parseFloat(body.density) : undefined,
-      failureRate: body.failureRate ? parseFloat(body.failureRate) : undefined,
+      failureRate: body.failureRate !== undefined && body.failureRate !== null ? parseFloat(body.failureRate) : undefined,
       notes: body.notes,
     },
   })

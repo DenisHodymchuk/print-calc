@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { CheckCircle, Clock, Package, Printer, Layers } from 'lucide-react'
+import { CheckCircle, Calendar, Tag } from 'lucide-react'
 import { Toaster } from '@/components/ui/sonner'
 
 type Quote = {
@@ -16,23 +16,20 @@ type Quote = {
   printTimeMinutes: number
   sellingPrice: number
   discountPercent: number
+  marginPercent: number
+  totalCost: number
   copies: number
   clientName: string | null
   photoUrl: string | null
   notes: string | null
   quoteApprovedAt: string | null
   createdAt: string
+  deliveryDate: string | null
   material: { name: string; type: string; colorHex: string | null; color: string | null } | null
   printer: { name: string } | null
   seller: { name: string | null; businessName: string | null; email: string }
   postProcessSteps: { name: string; timeMinutes: number }[]
   amsMaterials: { materialId: string; weightGrams: number; name: string | null; colorHex: string | null }[] | null
-}
-
-function formatTime(minutes: number) {
-  const h = Math.floor(minutes / 60)
-  const m = Math.round(minutes % 60)
-  return h > 0 ? `${h} год ${m} хв` : `${m} хв`
 }
 
 export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
@@ -53,6 +50,10 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
   }
 
   const businessName = quote.seller.businessName || quote.seller.name || quote.seller.email
+  const isAms = quote.amsMaterials && quote.amsMaterials.length > 0
+  const priceBeforeDiscount = quote.discountPercent > 0
+    ? quote.sellingPrice / (1 - quote.discountPercent / 100)
+    : null
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,101 +72,65 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-        {/* Main info with photo */}
-        <div className={`flex gap-6 ${quote.photoUrl ? 'items-start' : ''}`}>
-          {quote.photoUrl && (
-            <div className="rounded-xl overflow-hidden border flex-shrink-0 w-48">
-              <img
-                src={quote.photoUrl}
-                alt={quote.name}
-                className="w-full h-48 object-cover"
-              />
-            </div>
-          )}
-          <div className="flex-1 space-y-4">
-            <div>
-              {quote.clientName && (
-                <p className="text-sm text-muted-foreground mb-1">Для: {quote.clientName}</p>
-              )}
-              <h1 className="text-2xl font-bold">{quote.name}</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Дата: {new Date(quote.createdAt).toLocaleDateString('uk-UA')}
-              </p>
-            </div>
-
-            {/* Details grid */}
-            {(() => {
-              const isAms = quote.amsMaterials && quote.amsMaterials.length > 0
-              const totalWeight = isAms
-                ? quote.amsMaterials!.reduce((s, a) => s + (a.weightGrams || 0), 0)
-                : quote.weightGrams
-              const materialLabel = isAms ? 'Пластик (AMS)' : 'Пластик'
-              const materialValue = isAms
-                ? quote.amsMaterials!.map(a => a.name).filter(Boolean).join(', ')
-                : (quote.material?.name || '')
-              return (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-2.5">
-                    <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Час друку</p>
-                      <p className="font-medium text-sm">{formatTime(quote.printTimeMinutes)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-2.5">
-                    <Package className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <div>
-                      <p className="text-xs text-muted-foreground">Вага</p>
-                      <p className="font-medium text-sm">{totalWeight} г</p>
-                    </div>
-                  </div>
-                  {quote.printer && (
-                    <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-2.5">
-                      <Printer className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Принтер</p>
-                        <p className="font-medium text-sm">{quote.printer.name}</p>
-                      </div>
-                    </div>
-                  )}
-                  {materialValue && (
-                    <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-2.5">
-                      <Layers className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">{materialLabel}</p>
-                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                          {isAms ? quote.amsMaterials!.map((a, i) => (
-                            <span key={i} className="flex items-center gap-1">
-                              {a.colorHex && <span className="w-3 h-3 rounded-full border inline-block" style={{ backgroundColor: a.colorHex }} />}
-                              <span className="font-medium text-sm">{a.name}</span>
-                            </span>
-                          )) : (
-                            <span className="flex items-center gap-1">
-                              {quote.material?.colorHex && <span className="w-3 h-3 rounded-full border inline-block" style={{ backgroundColor: quote.material.colorHex }} />}
-                              <span className="font-medium text-sm">{quote.material?.name}</span>
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })()}
+        {/* Photo — large */}
+        {quote.photoUrl && (
+          <div className="rounded-2xl overflow-hidden border">
+            <img
+              src={quote.photoUrl}
+              alt={quote.name}
+              className="w-full max-h-96 object-cover"
+            />
           </div>
+        )}
+
+        {/* Title & client */}
+        <div>
+          {quote.clientName && (
+            <p className="text-sm text-muted-foreground mb-1">Для: {quote.clientName}</p>
+          )}
+          <h1 className="text-2xl font-bold">{quote.name}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {new Date(quote.createdAt).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
         </div>
 
-        {/* Post-processing */}
-        {quote.postProcessSteps.length > 0 && (
-          <div>
-            <p className="text-sm font-medium mb-2">Постобробка</p>
-            <div className="space-y-1">
-              {quote.postProcessSteps.map((s, i) => (
-                <div key={i} className="flex justify-between text-sm text-muted-foreground">
-                  <span>{s.name}</span>
-                  {s.timeMinutes > 0 && <span>{formatTime(s.timeMinutes)}</span>}
-                </div>
-              ))}
+        {/* Materials */}
+        {(isAms || quote.material) && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {isAms ? (
+              <>
+                <Badge variant="outline" className="text-xs gap-1">
+                  <Tag className="w-3 h-3" /> AMS
+                </Badge>
+                {quote.amsMaterials!.map((a, i) => (
+                  <div key={i} className="flex items-center gap-1.5 bg-card border rounded-full px-3 py-1">
+                    {a.colorHex && (
+                      <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: a.colorHex }} />
+                    )}
+                    <span className="text-sm">{a.name}</span>
+                  </div>
+                ))}
+              </>
+            ) : quote.material && (
+              <div className="flex items-center gap-1.5 bg-card border rounded-full px-3 py-1">
+                {quote.material.colorHex && (
+                  <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: quote.material.colorHex }} />
+                )}
+                <span className="text-sm">{quote.material.name}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Delivery date */}
+        {quote.deliveryDate && (
+          <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-lg px-4 py-3">
+            <Calendar className="w-5 h-5 text-primary flex-shrink-0" />
+            <div>
+              <p className="text-xs text-muted-foreground">Орієнтовний термін готовності</p>
+              <p className="font-semibold">
+                {new Date(quote.deliveryDate).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
             </div>
           </div>
         )}
@@ -180,19 +145,28 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
         <Separator />
 
         {/* Pricing */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {quote.copies > 1 && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Кількість</span>
-              <span>{quote.copies} шт</span>
+              <span className="font-medium">{quote.copies} шт</span>
             </div>
           )}
-          {quote.discountPercent > 0 && (
-            <div className="flex justify-between text-sm text-green-600">
-              <span>Знижка</span>
-              <span>-{quote.discountPercent}%</span>
+
+          {/* Discount — prominent */}
+          {quote.discountPercent > 0 && priceBeforeDiscount && (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <p className="text-green-700 font-semibold text-sm">Персональна знижка</p>
+                <p className="text-green-600 text-xs mt-0.5">Спеціальна ціна для вас</p>
+              </div>
+              <div className="text-right">
+                <span className="text-green-700 font-bold text-xl">-{quote.discountPercent}%</span>
+                <p className="text-xs text-green-600 line-through">{priceBeforeDiscount.toFixed(0)} ₴</p>
+              </div>
             </div>
           )}
+
           <div className="flex justify-between items-center">
             <span className="text-lg font-semibold">Вартість</span>
             <span className="text-3xl font-bold">{quote.sellingPrice.toFixed(2)} ₴</span>
@@ -207,11 +181,11 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
 
         {/* CTA */}
         {approved ? (
-          <div className="flex items-center gap-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
+          <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-lg p-4">
             <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
             <div>
-              <p className="font-medium text-green-700 dark:text-green-400">Замовлення підтверджено</p>
-              <p className="text-sm text-green-600 dark:text-green-500">
+              <p className="font-medium text-green-700">Замовлення підтверджено</p>
+              <p className="text-sm text-green-600">
                 Ми вже отримали підтвердження і беремось до роботи
               </p>
             </div>

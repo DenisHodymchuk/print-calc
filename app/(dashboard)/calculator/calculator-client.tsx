@@ -165,6 +165,7 @@ export function CalculatorClient() {
     marginPercent: '30',
     discountPercent: '0',
     clientName: '',
+    deliveryDate: '',
     notes: '',
     photoUrl: '',
   })
@@ -199,6 +200,7 @@ export function CalculatorClient() {
         marginPercent: String(data.marginPercent || '30'),
         discountPercent: String(data.discountPercent || '0'),
         clientName: data.clientName || '',
+        deliveryDate: data.deliveryDate ? new Date(data.deliveryDate).toISOString().split('T')[0] : '',
         notes: data.notes || '',
         photoUrl: data.photoUrl || '',
       })
@@ -553,9 +555,13 @@ export function CalculatorClient() {
                   <Input name="clientName" value={form.clientName} onChange={handleChange} placeholder="Іван Іваненко" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Нотатки</Label>
-                  <Input name="notes" value={form.notes} onChange={handleChange} placeholder="Додаткова інформація..." />
+                  <Label>Термін готовності</Label>
+                  <Input name="deliveryDate" type="date" value={form.deliveryDate} onChange={handleChange} />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Нотатки</Label>
+                <Input name="notes" value={form.notes} onChange={handleChange} placeholder="Додаткова інформація..." />
               </div>
               <div className="space-y-2">
                 <Label>Фото виробу</Label>

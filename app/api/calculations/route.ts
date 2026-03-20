@@ -152,6 +152,7 @@ export async function POST(req: NextRequest) {
     sellingPrice,
     clientName: body.clientName || null,
     clientEmail: body.clientEmail || null,
+    deliveryDate: body.deliveryDate ? new Date(body.deliveryDate) : null,
     quoteToken,
     modelId: body.modelId || null,
     amsMaterials: amsRaw ? JSON.stringify(amsRaw.map((a: { materialId: string; weightGrams: string }) => ({ materialId: a.materialId, weightGrams: parseFloat(String(a.weightGrams)) || 0 }))) : null,

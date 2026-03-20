@@ -57,6 +57,9 @@ export default async function QuotePage({ params }: { params: Promise<{ token: s
     seller: calculation.user,
     postProcessSteps: calculation.postProcessSteps,
     amsMaterials: amsMaterialsResolved,
+    deliveryDate: (calculation as Record<string, unknown>).deliveryDate ? new Date((calculation as Record<string, unknown>).deliveryDate as string).toISOString() : null,
+    marginPercent: calculation.marginPercent,
+    totalCost: calculation.totalCost,
   }
 
   return <QuoteClient quote={quote} token={token} />
