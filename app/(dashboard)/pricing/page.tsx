@@ -103,9 +103,7 @@ export default function PricingPage() {
                 <h3 className="font-bold text-lg flex items-center gap-2">
                   Premium <Crown className="w-4 h-4 text-amber-500" />
                 </h3>
-                <p className="text-2xl font-bold mt-1">
-                  <span className="text-muted-foreground text-sm font-normal">Зверніться до адміністратора</span>
-                </p>
+                <p className="text-2xl font-bold mt-1">150 ₴ <span className="text-sm font-normal text-muted-foreground">/ місяць</span></p>
                 <p className="text-xs text-muted-foreground mt-1">Повний функціонал без обмежень</p>
               </div>
               {isPremium && (
