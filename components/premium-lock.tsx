@@ -1,6 +1,7 @@
 'use client'
 
 import { Lock } from 'lucide-react'
+import Link from 'next/link'
 import { usePremium } from '@/lib/use-premium'
 
 interface PremiumLockProps {
@@ -25,7 +26,7 @@ export function PremiumLock({ children, feature }: PremiumLockProps) {
           </div>
           <p className="font-semibold text-sm">Преміум функція</p>
           {feature && <p className="text-xs text-muted-foreground mt-1">{feature}</p>}
-          <p className="text-xs text-muted-foreground mt-1">Зверніться до адміністратора для активації</p>
+          <Link href="/pricing" className="text-xs text-primary hover:underline mt-1 block">Дізнатись більше →</Link>
         </div>
       </div>
     </div>
