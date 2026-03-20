@@ -103,21 +103,21 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
                   <Tag className="w-3 h-3" /> AMS
                 </Badge>
                 {quote.amsMaterials!.map((a, i) => (
-                  <div key={i} className="flex items-center gap-1.5 bg-card border rounded-full px-3 py-1">
+                  <span key={i} className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                     {a.colorHex && (
-                      <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: a.colorHex }} />
+                      <span className="w-2.5 h-2.5 rounded-full border" style={{ backgroundColor: a.colorHex }} />
                     )}
-                    <span className="text-sm">{a.name}</span>
-                  </div>
+                    {a.name}
+                  </span>
                 ))}
               </>
             ) : quote.material && (
-              <div className="flex items-center gap-1.5 bg-card border rounded-full px-3 py-1">
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                 {quote.material.colorHex && (
-                  <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: quote.material.colorHex }} />
+                  <span className="w-2.5 h-2.5 rounded-full border" style={{ backgroundColor: quote.material.colorHex }} />
                 )}
-                <span className="text-sm">{quote.material.name}</span>
-              </div>
+                {quote.material.name}
+              </span>
             )}
           </div>
         )}
