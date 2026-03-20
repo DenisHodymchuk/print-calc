@@ -100,16 +100,18 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {isAms ? (
                     <>
-                      <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0 mb-1">
-                        <Tag className="w-2.5 h-2.5" /> AMS
-                      </Badge>
-                      <div className="w-full space-y-0.5">
-                        {quote.amsMaterials!.map((a, i) => (
-                          <div key={i} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                            {a.colorHex && <span className="w-2 h-2 rounded-full border flex-shrink-0" style={{ backgroundColor: a.colorHex }} />}
-                            {a.name}
-                          </div>
-                        ))}
+                      <div className="flex items-start gap-2">
+                        <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0 flex-shrink-0 mt-0.5">
+                          <Tag className="w-2.5 h-2.5" /> AMS
+                        </Badge>
+                        <div className="space-y-0.5">
+                          {quote.amsMaterials!.map((a, i) => (
+                            <div key={i} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                              {a.colorHex && <span className="w-2 h-2 rounded-full border flex-shrink-0" style={{ backgroundColor: a.colorHex }} />}
+                              {a.name}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </>
                   ) : quote.material && (
@@ -170,15 +172,13 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
 
           {/* Discount — accent on old price */}
           {quote.discountPercent > 0 && priceBeforeDiscount && (
-            <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2.5 flex items-center justify-between">
+            <div className="relative bg-green-50 border border-green-200 rounded-lg px-3 py-2.5 flex items-center justify-between">
               <div>
                 <p className="text-green-700 font-semibold text-xs">Персональна знижка</p>
                 <p className="text-green-600 text-[10px] mt-0.5">Спеціальна ціна для вас</p>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-green-600 line-through font-bold text-lg">{(priceBeforeDiscount / quote.copies * qty).toFixed(0)} ₴</span>
-                <span className="text-green-500 text-[10px]">-{quote.discountPercent}%</span>
-              </div>
+              <span className="text-green-600 line-through font-bold text-lg">{(priceBeforeDiscount / quote.copies * qty).toFixed(0)} ₴</span>
+              <span className="absolute top-1 right-2 text-green-400 text-[9px]">-{quote.discountPercent}%</span>
             </div>
           )}
 
