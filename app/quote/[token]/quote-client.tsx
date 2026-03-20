@@ -35,10 +35,17 @@ type Quote = {
 export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
   const [approved, setApproved] = useState(!!quote.quoteApprovedAt)
   const [approving, setApproving] = useState(false)
+  const pricePerUnit = quote.sellingPrice / quote.copies
+  const [qty, setQty] = useState(quote.copies)
+  const totalPrice = pricePerUnit * qty
 
   async function handleApprove() {
     setApproving(true)
-    const res = await fetch(`/api/quote/${token}`, { method: 'POST' })
+    const res = await fetch(`/api/quote/${token}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ copies: qty }),
+    })
     setApproving(false)
     if (res.ok) {
       setApproved(true)
@@ -139,10 +146,30 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
 
         {/* Pricing */}
         <div className="space-y-4">
-          {quote.copies > 1 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Кількість</span>
-              <span className="font-medium">{quote.copies} шт</span>
+          {/* Quantity selector */}
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Кількість</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setQty(q => Math.max(1, q - 1))}
+                disabled={approved}
+                className="w-8 h-8 rounded-lg border border-input flex items-center justify-center text-lg hover:bg-accent transition-colors disabled:opacity-50"
+              >-</button>
+              <span className="w-10 text-center font-semibold">{qty}</span>
+              <button
+                type="button"
+                onClick={() => setQty(q => q + 1)}
+                disabled={approved}
+                className="w-8 h-8 rounded-lg border border-input flex items-center justify-center text-lg hover:bg-accent transition-colors disabled:opacity-50"
+              >+</button>
+            </div>
+          </div>
+
+          {qty > 1 && (
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>Ціна за 1 шт</span>
+              <span>{pricePerUnit.toFixed(2)} ₴</span>
             </div>
           )}
 
@@ -155,21 +182,15 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
               </div>
               <div className="text-right">
                 <span className="text-green-700 font-bold text-xl">-{quote.discountPercent}%</span>
-                <p className="text-xs text-green-600 line-through">{priceBeforeDiscount.toFixed(0)} ₴</p>
+                <p className="text-xs text-green-600 line-through">{(priceBeforeDiscount / quote.copies * qty).toFixed(0)} ₴</p>
               </div>
             </div>
           )}
 
           <div className="flex justify-between items-center">
             <span className="text-lg font-semibold">Вартість</span>
-            <span className="text-3xl font-bold">{quote.sellingPrice.toFixed(2)} ₴</span>
+            <span className="text-3xl font-bold">{totalPrice.toFixed(2)} ₴</span>
           </div>
-          {quote.copies > 1 && (
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>За одиницю</span>
-              <span>{(quote.sellingPrice / quote.copies).toFixed(2)} ₴</span>
-            </div>
-          )}
         </div>
 
         {/* CTA */}

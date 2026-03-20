@@ -49,9 +49,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     return NextResponse.json({ error: 'Вже підтверджено' }, { status: 400 })
   }
 
+  let body: { copies?: number } = {}
+  try { body = await req.json() } catch { /* no body */ }
+
+  const pricePerUnit = calculation.sellingPrice / calculation.copies
+  const newCopies = body.copies && body.copies >= 1 ? body.copies : calculation.copies
+  const newSellingPrice = pricePerUnit * newCopies
+
   const updated = await prisma.calculation.update({
     where: { quoteToken: token },
-    data: { quoteApprovedAt: new Date(), status: 'APPROVED' },
+    data: {
+      quoteApprovedAt: new Date(),
+      status: 'APPROVED',
+      copies: newCopies,
+      sellingPrice: newSellingPrice,
+    },
   })
 
   return NextResponse.json({ success: true, approvedAt: updated.quoteApprovedAt })
