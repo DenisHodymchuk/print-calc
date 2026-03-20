@@ -85,9 +85,11 @@ export function Navbar() {
                 </DropdownMenuItem>
               </>
             )}
-            <DropdownMenuItem onClick={() => window.location.href = '/support'} className="gap-2 cursor-pointer">
-              <MessageSquare className="w-4 h-4" /> Підтримка
-            </DropdownMenuItem>
+            {!isAdmin && (
+              <DropdownMenuItem onClick={() => window.location.href = '/support'} className="gap-2 cursor-pointer">
+                <MessageSquare className="w-4 h-4" /> Підтримка
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => window.location.href = '/settings'} className="gap-2 cursor-pointer">
               <Settings className="w-4 h-4" /> Налаштування
             </DropdownMenuItem>

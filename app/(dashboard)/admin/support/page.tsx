@@ -112,9 +112,14 @@ export default function AdminSupportPage() {
               >
                 <div className="flex items-center justify-between">
                   <p className="font-medium text-sm truncate">{c.name || c.email}</p>
-                  {c.unread > 0 && (
-                    <Badge variant="destructive" className="text-[10px] px-1.5 py-0 ml-1">{c.unread}</Badge>
-                  )}
+                  <div className="flex items-center gap-1 ml-1">
+                    {c.lastMessage?.includes('💎') && (
+                      <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 rounded-full font-medium">PRO</span>
+                    )}
+                    {c.unread > 0 && (
+                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{c.unread}</Badge>
+                    )}
+                  </div>
                 </div>
                 <p className="text-xs text-muted-foreground truncate mt-0.5">{c.lastMessage}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{formatTime(c.lastAt)}</p>

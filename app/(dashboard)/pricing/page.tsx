@@ -1,8 +1,11 @@
 'use client'
 
-import { Check, X, Crown } from 'lucide-react'
+import { Check, X, Crown, MessageSquare } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Header } from '@/components/layout/header'
+import { toast } from 'sonner'
 import { usePremium } from '@/lib/use-premium'
 
 const features = [
@@ -32,6 +35,21 @@ function Icon({ ok }: { ok: boolean }) {
 
 export default function PricingPage() {
   const { isPremium } = usePremium()
+  const router = useRouter()
+
+  async function handleBuyRequest() {
+    const res = await fetch('/api/support', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: '💎 Хочу придбати Premium підписку! Підкажіть деталі оплати.' }),
+    })
+    if (res.ok) {
+      toast.success('Запит надіслано! Ми відповімо найближчим часом.')
+      router.push('/support')
+    } else {
+      toast.error('Помилка, спробуйте ще раз')
+    }
+  }
 
   return (
     <>
@@ -103,6 +121,11 @@ export default function PricingPage() {
                   </div>
                 ))}
               </div>
+              {!isPremium && (
+                <Button onClick={handleBuyRequest} className="w-full gap-2 mt-2 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white">
+                  <MessageSquare className="w-4 h-4" /> Хочу Premium
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
