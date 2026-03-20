@@ -26,10 +26,11 @@ model User {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  printers     Printer[]
-  materials    Material[]
-  calculations Calculation[]
-  models       Model[]
+  printers        Printer[]
+  materials       Material[]
+  calculations    Calculation[]
+  models          Model[]
+  supportMessages SupportMessage[]
 }
 
 model Printer {
@@ -178,6 +179,17 @@ model Model {
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   calculations Calculation[]
+}
+
+model SupportMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  message   String
+  fromAdmin Boolean  @default(false)
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PostProcessingStep {

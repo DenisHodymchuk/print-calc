@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
-import { Calculator, Layers, Printer, History, Settings, LogOut, LayoutDashboard, BookOpen, Shield, Crown } from 'lucide-react'
+import { Calculator, Layers, Printer, History, Settings, LogOut, LayoutDashboard, BookOpen, Shield, Crown, MessageSquare } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useSession } from 'next-auth/react'
@@ -76,10 +76,18 @@ export function Navbar() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             {isAdmin && (
-              <DropdownMenuItem onClick={() => window.location.href = '/admin'} className="gap-2 cursor-pointer">
-                <Shield className="w-4 h-4" /> Адмін панель
-              </DropdownMenuItem>
+              <>
+                <DropdownMenuItem onClick={() => window.location.href = '/admin'} className="gap-2 cursor-pointer">
+                  <Shield className="w-4 h-4" /> Адмін панель
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.location.href = '/admin/support'} className="gap-2 cursor-pointer">
+                  <MessageSquare className="w-4 h-4" /> Чати підтримки
+                </DropdownMenuItem>
+              </>
             )}
+            <DropdownMenuItem onClick={() => window.location.href = '/support'} className="gap-2 cursor-pointer">
+              <MessageSquare className="w-4 h-4" /> Підтримка
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => window.location.href = '/settings'} className="gap-2 cursor-pointer">
               <Settings className="w-4 h-4" /> Налаштування
             </DropdownMenuItem>
