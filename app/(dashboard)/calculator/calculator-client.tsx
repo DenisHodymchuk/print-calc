@@ -10,8 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { Plus, Trash2, Save, ChevronDown, ChevronUp, ImagePlus, X } from 'lucide-react'
+import { Plus, Trash2, Save, ChevronDown, ChevronUp, ImagePlus, X, Lock } from 'lucide-react'
 import { calculateCosts, calculateSellingPrice } from '@/lib/cost-calculator'
+import { usePremium } from '@/lib/use-premium'
 
 type Material = { id: string; name: string; brand: string | null; type: string; color: string | null; colorHex: string | null; pricePerKg: number; density: number; failureRate: number }
 type Printer = { id: string; name: string; brand: string | null; purchasePrice: number; powerWatts: number; lifetimeHours: number; maintenanceReservePerHour: number }
@@ -140,6 +141,7 @@ const COLORS = ['#6366f1', '#f59e0b', '#10b981', '#8b5cf6']
 export function CalculatorClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { isPremium } = usePremium()
   const editId = searchParams.get('edit')
   const fromId = searchParams.get('from')
   const modelId = searchParams.get('modelId')
@@ -360,9 +362,9 @@ export function CalculatorClient() {
                   >Однотонний</button>
                   <button
                     type="button"
-                    onClick={() => setUseAms(true)}
-                    className={`text-xs px-3 py-1.5 border-l border-input transition-colors ${useAms ? 'bg-primary text-white' : 'bg-transparent text-foreground hover:bg-accent'}`}
-                  >Багатокольоровий (AMS)</button>
+                    onClick={() => { if (!isPremium) { toast.error('AMS доступний у Преміум'); return }; setUseAms(true) }}
+                    className={`text-xs px-3 py-1.5 border-l border-input transition-colors ${useAms ? 'bg-primary text-white' : 'bg-transparent text-foreground hover:bg-accent'} flex items-center gap-1`}
+                  >{!isPremium && <Lock className="w-3 h-3" />}Багатокольоровий (AMS)</button>
                 </div>
               </div>
 
@@ -543,9 +545,9 @@ export function CalculatorClient() {
                   <Label>Маржа (%)</Label>
                   <Input name="marginPercent" type="number" min="0" value={form.marginPercent} onChange={handleChange} />
                 </div>
-                <div className="space-y-2">
-                  <Label>Знижка (%)</Label>
-                  <Input name="discountPercent" type="number" min="0" max="100" value={form.discountPercent} onChange={handleChange} />
+                <div className="space-y-2 relative">
+                  <Label className="flex items-center gap-1">Знижка (%) {!isPremium && <Lock className="w-3 h-3 text-muted-foreground" />}</Label>
+                  <Input name="discountPercent" type="number" min="0" max="100" value={form.discountPercent} onChange={handleChange} disabled={!isPremium} />
                 </div>
               </div>
               <Separator />
@@ -555,8 +557,8 @@ export function CalculatorClient() {
                   <Input name="clientName" value={form.clientName} onChange={handleChange} placeholder="Іван Іваненко" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Термін готовності</Label>
-                  <Input name="deliveryDate" type="date" value={form.deliveryDate} onChange={handleChange} />
+                  <Label className="flex items-center gap-1">Термін готовності {!isPremium && <Lock className="w-3 h-3 text-muted-foreground" />}</Label>
+                  <Input name="deliveryDate" type="date" value={form.deliveryDate} onChange={handleChange} disabled={!isPremium} />
                 </div>
               </div>
               <div className="space-y-2">
@@ -564,8 +566,12 @@ export function CalculatorClient() {
                 <Input name="notes" value={form.notes} onChange={handleChange} placeholder="Додаткова інформація..." />
               </div>
               <div className="space-y-2">
-                <Label>Фото виробу</Label>
-                {form.photoUrl ? (
+                <Label className="flex items-center gap-1">Фото виробу {!isPremium && <Lock className="w-3 h-3 text-muted-foreground" />}</Label>
+                {!isPremium ? (
+                  <div className="text-xs text-muted-foreground border border-dashed border-input rounded-lg px-4 py-3 flex items-center gap-2">
+                    <Lock className="w-3 h-3" /> Доступно у Преміум
+                  </div>
+                ) : form.photoUrl ? (
                   <div className="relative inline-block">
                     <img src={form.photoUrl} alt="Фото" className="h-32 rounded-lg border object-cover" />
                     <button

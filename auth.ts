@@ -36,6 +36,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.name,
+          role: user.role,
+          isPremium: user.isPremium,
         }
       },
     }),
@@ -59,7 +61,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return true
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
       if (user) {
         token.id = user.id
       }
@@ -67,13 +69,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
         })
-        if (dbUser) token.id = dbUser.id
+        if (dbUser) {
+          token.id = dbUser.id
+          token.role = dbUser.role
+          token.isPremium = dbUser.isPremium
+        }
+      }
+      // Refresh role/premium from DB on every token refresh
+      if (token.id && (!account || trigger === 'update')) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true, isPremium: true, premiumUntil: true },
+        })
+        if (dbUser) {
+          const premiumActive = dbUser.isPremium && (!dbUser.premiumUntil || dbUser.premiumUntil > new Date())
+          token.role = dbUser.role
+          token.isPremium = premiumActive
+        }
       }
       return token
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string
+        session.user.role = token.role as string
+        session.user.isPremium = token.isPremium as boolean
       }
       return session
     },

@@ -7,12 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 model User {
   id              String   @id @default(cuid())
   email           String   @unique
   password        String
   name            String?
   businessName    String?
+  role            UserRole @default(USER)
+  isPremium       Boolean  @default(false)
+  premiumUntil    DateTime?
   hourlyRate      Float    @default(0)
   electricityRate Float    @default(0)
   createdAt       DateTime @default(now())

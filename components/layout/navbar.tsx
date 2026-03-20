@@ -4,10 +4,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
-import { Calculator, Layers, Printer, History, Settings, LogOut, LayoutDashboard, BookOpen } from 'lucide-react'
+import { Calculator, Layers, Printer, History, Settings, LogOut, LayoutDashboard, BookOpen, Shield, Crown } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useSession } from 'next-auth/react'
+import { usePremium } from '@/lib/use-premium'
 
 const navItems = [
   { href: '/dashboard', label: 'Дашборд', icon: LayoutDashboard },
@@ -21,6 +22,7 @@ const navItems = [
 export function Navbar() {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const { isPremium, isAdmin } = usePremium()
   const name = session?.user?.name || session?.user?.email || '?'
   const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 
@@ -66,8 +68,18 @@ export function Navbar() {
               <AvatarFallback className="text-xs bg-primary text-white">{initials}</AvatarFallback>
             </Avatar>
             <span className="hidden sm:block">{session?.user?.name || session?.user?.email}</span>
+            {isPremium && (
+              <span className="inline-flex items-center gap-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                <Crown className="w-2.5 h-2.5" />PRO
+              </span>
+            )}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
+            {isAdmin && (
+              <DropdownMenuItem onClick={() => window.location.href = '/admin'} className="gap-2 cursor-pointer">
+                <Shield className="w-4 h-4" /> Адмін панель
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => window.location.href = '/settings'} className="gap-2 cursor-pointer">
               <Settings className="w-4 h-4" /> Налаштування
             </DropdownMenuItem>
