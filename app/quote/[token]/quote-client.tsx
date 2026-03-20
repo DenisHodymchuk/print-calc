@@ -79,64 +79,63 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-        {/* Photo + title side by side */}
-        <div className="flex gap-4 items-start">
-          {quote.photoUrl && (
-            <div className="rounded-xl overflow-hidden border flex-shrink-0 w-32 h-32">
-              <img src={quote.photoUrl} alt={quote.name} className="w-full h-full object-cover" />
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            {quote.clientName && (
-              <p className="text-xs text-muted-foreground">Для: {quote.clientName}</p>
-            )}
-            <h1 className="text-xl font-bold mt-0.5">{quote.name}</h1>
-            <p className="text-xs text-muted-foreground mt-1">
-              {new Date(quote.createdAt).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
-            {/* Materials inline */}
-            {(isAms || quote.material) && (
-              <div className="flex items-center gap-1.5 flex-wrap mt-2">
-                {isAms ? (
-                  <>
-                    <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
-                      <Tag className="w-2.5 h-2.5" /> AMS
-                    </Badge>
-                    {quote.amsMaterials!.map((a, i) => (
-                      <span key={i} className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-                        {a.colorHex && <span className="w-2 h-2 rounded-full border" style={{ backgroundColor: a.colorHex }} />}
-                        {a.name}
-                      </span>
-                    ))}
-                  </>
-                ) : quote.material && (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-                    {quote.material.colorHex && <span className="w-2 h-2 rounded-full border" style={{ backgroundColor: quote.material.colorHex }} />}
-                    {quote.material.name}
-                  </span>
-                )}
+        {/* Card: photo + info + delivery + qty */}
+        <div className="bg-card border rounded-xl p-4">
+          <div className="flex gap-4 items-start">
+            {quote.photoUrl && (
+              <div className="rounded-xl overflow-hidden flex-shrink-0 w-36 self-stretch">
+                <img src={quote.photoUrl} alt={quote.name} className="w-full h-full object-cover" />
               </div>
             )}
+            <div className="flex-1 min-w-0 space-y-3">
+              {quote.clientName && (
+                <p className="text-xs text-muted-foreground">Для: {quote.clientName}</p>
+              )}
+              <h1 className="text-xl font-bold">{quote.name}</h1>
+              <p className="text-xs text-muted-foreground">
+                {new Date(quote.createdAt).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+              {/* Materials */}
+              {(isAms || quote.material) && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {isAms ? (
+                    <>
+                      <Badge variant="outline" className="text-[10px] gap-0.5 px-1.5 py-0">
+                        <Tag className="w-2.5 h-2.5" /> AMS
+                      </Badge>
+                      {quote.amsMaterials!.map((a, i) => (
+                        <span key={i} className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                          {a.colorHex && <span className="w-2 h-2 rounded-full border" style={{ backgroundColor: a.colorHex }} />}
+                          {a.name}
+                        </span>
+                      ))}
+                    </>
+                  ) : quote.material && (
+                    <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                      {quote.material.colorHex && <span className="w-2 h-2 rounded-full border" style={{ backgroundColor: quote.material.colorHex }} />}
+                      {quote.material.name}
+                    </span>
+                  )}
+                </div>
+              )}
+              {/* Delivery date */}
+              {quote.deliveryDate && (
+                <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
+                  <Calendar className="w-4 h-4 text-primary flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-[11px] text-muted-foreground">Орієнтовний термін готовності</p>
+                    <p className="font-semibold text-sm">
+                      {new Date(quote.deliveryDate).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                  </div>
+                  {qty > quote.copies && (
+                    <span className="text-[10px] text-primary/70">* термін може збільшитись</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-
-        {/* Delivery date */}
-        {quote.deliveryDate && (
-          <div className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
-            <Calendar className="w-4 h-4 text-primary flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-[11px] text-muted-foreground">Орієнтовний термін готовності</p>
-              <p className="font-semibold text-sm">
-                {new Date(quote.deliveryDate).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })}
-              </p>
-            </div>
-            {qty > quote.copies && (
-              <span className="text-[10px] text-primary/70">* термін може збільшитись</span>
-            )}
-          </div>
-        )}
-
-        <Separator />
 
         {/* Pricing */}
         <div className="space-y-3">
@@ -167,16 +166,16 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
             </div>
           )}
 
-          {/* Discount */}
+          {/* Discount — accent on old price */}
           {quote.discountPercent > 0 && priceBeforeDiscount && (
             <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2.5 flex items-center justify-between">
               <div>
                 <p className="text-green-700 font-semibold text-xs">Персональна знижка</p>
                 <p className="text-green-600 text-[10px] mt-0.5">Спеціальна ціна для вас</p>
               </div>
-              <div className="text-right">
-                <span className="text-green-700 font-bold text-lg">-{quote.discountPercent}%</span>
-                <p className="text-[10px] text-green-600 line-through">{(priceBeforeDiscount / quote.copies * qty).toFixed(0)} ₴</p>
+              <div className="flex items-center gap-2">
+                <span className="text-green-600 line-through font-bold text-lg">{(priceBeforeDiscount / quote.copies * qty).toFixed(0)} ₴</span>
+                <span className="text-green-700 text-sm">-{quote.discountPercent}%</span>
               </div>
             </div>
           )}
