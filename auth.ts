@@ -61,30 +61,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return true
     },
-    async jwt({ token, user, account, trigger }) {
-      if (user) {
-        token.id = user.id
-      }
-      if (account?.provider === 'google' && token.email) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email },
-        })
+    async jwt({ token, user, account }) {
+      // On initial sign-in, resolve DB user
+      if (account) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let dbUser: any = null
+        if (account.provider === 'google' && token.email) {
+          dbUser = await prisma.user.findUnique({ where: { email: token.email } })
+        } else if (user?.id) {
+          dbUser = await prisma.user.findUnique({ where: { id: user.id } })
+        }
         if (dbUser) {
           token.id = dbUser.id
-          token.role = dbUser.role
-          token.isPremium = dbUser.isPremium
-        }
-      }
-      // Refresh role/premium from DB on every token refresh
-      if (token.id && (!account || trigger === 'update')) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { role: true, isPremium: true, premiumUntil: true },
-        })
-        if (dbUser) {
-          const premiumActive = dbUser.isPremium && (!dbUser.premiumUntil || dbUser.premiumUntil > new Date())
-          token.role = dbUser.role
-          token.isPremium = premiumActive
+          token.role = dbUser.role ?? 'USER'
+          const premiumUntil = dbUser.premiumUntil as Date | null
+          token.isPremium = (dbUser.isPremium ?? false) && (!premiumUntil || premiumUntil > new Date())
         }
       }
       return token
