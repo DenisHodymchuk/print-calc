@@ -135,13 +135,6 @@ export function QuoteClient({ quote, token }: { quote: Quote; token: string }) {
           </div>
         )}
 
-        {/* Notes */}
-        {quote.notes && (
-          <div className="bg-muted/50 rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">{quote.notes}</p>
-          </div>
-        )}
-
         <Separator />
 
         {/* Pricing */}
