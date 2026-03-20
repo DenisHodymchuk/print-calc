@@ -31,8 +31,12 @@ export default function SupportPage() {
     return () => clearInterval(interval)
   }, [fetchMessages])
 
+  const prevCountRef = useRef(0)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (messages.length > prevCountRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+    prevCountRef.current = messages.length
   }, [messages])
 
   async function handleSend() {

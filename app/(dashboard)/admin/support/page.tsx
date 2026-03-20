@@ -35,6 +35,7 @@ export default function AdminSupportPage() {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const prevCountRef = useRef(0)
 
   useEffect(() => {
     if (isAdmin === false) router.replace('/dashboard')
@@ -61,7 +62,10 @@ export default function AdminSupportPage() {
   }, [selectedUserId, fetchMessages])
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (messages.length > prevCountRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+    prevCountRef.current = messages.length
   }, [messages])
 
   async function handleSend() {
