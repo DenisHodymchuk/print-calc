@@ -45,41 +45,39 @@ export function calculateCosts(inputs: CostInputs): CostBreakdown {
     printTimeMinutes, purchasePrice, lifetimeHours, maintenanceReservePerHour, powerWatts, electricityRate,
     setupMinutes, postProcMinutes, hourlyRate,
     postProcessStepsCost,
-    copies,
   } = inputs
 
   const printTimeHours = printTimeMinutes / 60
   const laborHours = (setupMinutes + postProcMinutes) / 60
 
-  // Material cost per unit (with failure rate buffer)
-  // AMS: sum costs from multiple materials; single: use single material
-  let materialCostPerUnit: number
+  // Weight and time from slicer are TOTAL (for all copies on bed)
+  // Material cost — total for entire print
+  let materialCost: number
   if (inputs.amsMaterials && inputs.amsMaterials.length > 0) {
-    materialCostPerUnit = inputs.amsMaterials.reduce((sum, m) =>
+    materialCost = inputs.amsMaterials.reduce((sum, m) =>
       sum + (m.weightGrams / 1000) * m.pricePerKg * (1 + m.failureRate), 0)
   } else {
-    materialCostPerUnit = (weightGrams / 1000) * pricePerKg * (1 + failureRate)
+    materialCost = (weightGrams / 1000) * pricePerKg * (1 + failureRate)
   }
 
-  // Machine cost per unit
+  // Machine cost — total for entire print time
   const depreciationPerHour = lifetimeHours > 0 ? purchasePrice / lifetimeHours : 0
   const electricityPerHour = (powerWatts / 1000) * electricityRate
-  const machineCostPerUnit = printTimeHours * (depreciationPerHour + electricityPerHour + maintenanceReservePerHour)
+  const machineCost = printTimeHours * (depreciationPerHour + electricityPerHour + maintenanceReservePerHour)
 
-  // Labor cost (shared across copies)
-  const laborCostPerUnit = (laborHours * hourlyRate + postProcessStepsCost) / Math.max(copies, 1)
+  // Labor cost — setup done once for the batch
+  const laborCost = laborHours * hourlyRate + postProcessStepsCost
 
   // Overhead (10% of material + machine)
-  const baseOverhead = (materialCostPerUnit + machineCostPerUnit) * 0.1
-  const overheadCost = baseOverhead
+  const overheadCost = (materialCost + machineCost) * 0.1
 
-  const totalCost = (materialCostPerUnit + machineCostPerUnit + laborCostPerUnit + overheadCost) * copies
+  const totalCost = materialCost + machineCost + laborCost + overheadCost
 
   return {
-    materialCost: materialCostPerUnit * copies,
-    machineCost: machineCostPerUnit * copies,
-    laborCost: laborCostPerUnit * copies,
-    overheadCost: overheadCost * copies,
+    materialCost,
+    machineCost,
+    laborCost,
+    overheadCost,
     totalCost,
   }
 }
