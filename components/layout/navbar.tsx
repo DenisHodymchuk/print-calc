@@ -22,7 +22,7 @@ const navItems = [
 export function Navbar() {
   const pathname = usePathname()
   const { data: session } = useSession()
-  const { isPremium, isAdmin } = usePremium()
+  const { isPremium, isAdmin, premiumUntil } = usePremium()
   const name = session?.user?.name || session?.user?.email || '?'
   const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 
@@ -69,7 +69,7 @@ export function Navbar() {
             </Avatar>
             <span className="hidden sm:block">{session?.user?.name || session?.user?.email}</span>
             {isPremium && (
-              <span className="inline-flex items-center gap-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full" title={premiumUntil ? `PRO до ${new Date(premiumUntil).toLocaleDateString('uk-UA')}` : 'PRO назавжди'}>
                 <Crown className="w-2.5 h-2.5" />PRO
               </span>
             )}

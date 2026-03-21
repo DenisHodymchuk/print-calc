@@ -30,12 +30,20 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 12)
 
+    // Check if promo trial is active
+    const promo = await prisma.appSettings.findUnique({ where: { key: 'promoTrialDays' } })
+    const premiumData = promo ? {
+      isPremium: true,
+      premiumUntil: new Date(Date.now() + parseInt(promo.value) * 86400000),
+    } : {}
+
     const user = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         name,
         businessName,
+        ...premiumData,
       },
     })
 

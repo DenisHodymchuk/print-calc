@@ -41,7 +41,10 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: 'desc' },
   })
 
-  return NextResponse.json(users)
+  // Get promo setting
+  const promo = await prisma.appSettings.findUnique({ where: { key: 'promoTrialDays' } })
+
+  return NextResponse.json({ users, promo: promo ? { enabled: true, days: parseInt(promo.value) } : { enabled: false, days: 0 } })
 }
 
 export async function PATCH(req: NextRequest) {
@@ -49,15 +52,20 @@ export async function PATCH(req: NextRequest) {
 
   const body = await req.json()
 
-  // Grant trial to ALL users
-  if (body.action === 'trialAll') {
+  // Toggle promo: new registrations get PRO for N days
+  if (body.action === 'togglePromo') {
+    const enabled = body.enabled as boolean
     const days = body.days || 30
-    const until = new Date()
-    until.setDate(until.getDate() + days)
-    const result = await prisma.user.updateMany({
-      data: { isPremium: true, premiumUntil: until },
-    })
-    return NextResponse.json({ count: result.count, until })
+    if (enabled) {
+      await prisma.appSettings.upsert({
+        where: { key: 'promoTrialDays' },
+        update: { value: String(days) },
+        create: { key: 'promoTrialDays', value: String(days) },
+      })
+    } else {
+      await prisma.appSettings.deleteMany({ where: { key: 'promoTrialDays' } })
+    }
+    return NextResponse.json({ enabled, days })
   }
 
   const { userId, isPremium, role } = body

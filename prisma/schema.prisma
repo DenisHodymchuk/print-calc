@@ -192,6 +192,11 @@ model SupportMessage {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model AppSettings {
+  key   String @id
+  value String
+}
+
 model PostProcessingStep {
   id            String @id @default(cuid())
   calculationId String

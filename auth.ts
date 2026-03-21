@@ -49,11 +49,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { email: user.email! },
         })
         if (!existing) {
+          // Check if promo trial is active
+          const promo = await prisma.appSettings.findUnique({ where: { key: 'promoTrialDays' } })
+          const premiumData = promo ? {
+            isPremium: true,
+            premiumUntil: new Date(Date.now() + parseInt(promo.value) * 86400000),
+          } : {}
           await prisma.user.create({
             data: {
               email: user.email!,
               name: user.name ?? null,
               password: crypto.randomUUID(),
+              ...premiumData,
             },
           })
         }

@@ -24,6 +24,8 @@ export function AdminClient() {
   const [users, setUsers] = useState<UserInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [promoEnabled, setPromoEnabled] = useState(false)
+  const [promoDays, setPromoDays] = useState(30)
 
   const fetchUsers = useCallback(async () => {
     setLoading(true)
@@ -32,7 +34,9 @@ export function AdminClient() {
     const res = await fetch(`/api/admin/users?${params}`)
     if (res.ok) {
       const data = await res.json()
-      setUsers(data)
+      setUsers(data.users)
+      setPromoEnabled(data.promo.enabled)
+      if (data.promo.days) setPromoDays(data.promo.days)
     }
     setLoading(false)
   }, [search])
@@ -71,17 +75,16 @@ export function AdminClient() {
     }
   }
 
-  async function grantTrialAll() {
-    if (!confirm('Дати PRO всім користувачам на 30 днів?')) return
+  async function togglePromo() {
+    const newState = !promoEnabled
     const res = await fetch('/api/admin/users', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'trialAll', days: 30 }),
+      body: JSON.stringify({ action: 'togglePromo', enabled: newState, days: promoDays }),
     })
     if (res.ok) {
-      const data = await res.json()
-      toast.success(`PRO активовано для ${data.count} користувачів на 30 днів`)
-      fetchUsers()
+      setPromoEnabled(newState)
+      toast.success(newState ? `Промо увімкнено — нові акаунти отримають PRO на ${promoDays} днів` : 'Промо вимкнено')
     } else {
       toast.error('Помилка')
     }
@@ -97,8 +100,26 @@ export function AdminClient() {
         <Badge variant="outline" className="text-sm px-3">
           {users.length} користувач(ів)
         </Badge>
-        <Button size="sm" variant="outline" className="gap-1.5 text-xs ml-auto" onClick={grantTrialAll}>
-          <Crown className="w-3.5 h-3.5 text-amber-500" /> PRO всім на 30 днів
+      </div>
+
+      {/* Promo toggle */}
+      <div className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${promoEnabled ? 'bg-green-50 border-green-200' : 'bg-muted/30 border-input'}`}>
+        <Crown className={`w-5 h-5 flex-shrink-0 ${promoEnabled ? 'text-green-600' : 'text-muted-foreground'}`} />
+        <div className="flex-1">
+          <p className="text-sm font-medium">{promoEnabled ? 'Промо-акція активна' : 'Промо-акція вимкнена'}</p>
+          <p className="text-xs text-muted-foreground">
+            {promoEnabled ? `Нові акаунти отримують PRO на ${promoDays} днів` : 'Нові акаунти реєструються без PRO'}
+          </p>
+        </div>
+        <Input
+          type="number" min="1" max="365" value={promoDays}
+          onChange={e => setPromoDays(parseInt(e.target.value) || 30)}
+          className="w-16 text-center text-sm"
+          disabled={promoEnabled}
+        />
+        <span className="text-xs text-muted-foreground">днів</span>
+        <Button size="sm" variant={promoEnabled ? 'destructive' : 'default'} className="gap-1.5 text-xs" onClick={togglePromo}>
+          {promoEnabled ? 'Вимкнути' : 'Увімкнути'}
         </Button>
       </div>
 
