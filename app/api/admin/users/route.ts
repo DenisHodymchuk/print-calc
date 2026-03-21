@@ -48,12 +48,27 @@ export async function PATCH(req: NextRequest) {
   if (!(await isAdmin())) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const body = await req.json()
+
+  // Grant trial to ALL users
+  if (body.action === 'trialAll') {
+    const days = body.days || 30
+    const until = new Date()
+    until.setDate(until.getDate() + days)
+    const result = await prisma.user.updateMany({
+      data: { isPremium: true, premiumUntil: until },
+    })
+    return NextResponse.json({ count: result.count, until })
+  }
+
   const { userId, isPremium, role } = body
 
   if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 })
 
   const data: Record<string, unknown> = {}
-  if (typeof isPremium === 'boolean') data.isPremium = isPremium
+  if (typeof isPremium === 'boolean') {
+    data.isPremium = isPremium
+    data.premiumUntil = isPremium ? null : null // manual toggle — no expiry
+  }
   if (role === 'ADMIN' || role === 'USER') data.role = role
 
   const updated = await prisma.user.update({

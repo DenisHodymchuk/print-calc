@@ -576,8 +576,8 @@ export function CalculatorClient() {
               <div className="space-y-2">
                 <Label className="flex items-center gap-1">Фото виробу {!isPremium && <span onClick={() => router.push('/pricing')} className="cursor-pointer bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">PRO</span>}</Label>
                 {!isPremium ? (
-                  <div onClick={() => router.push('/pricing')} className="cursor-pointer text-xs text-muted-foreground border border-dashed border-input rounded-lg px-4 py-3 flex items-center gap-2 hover:bg-accent/50 transition-colors">
-                    <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">PRO</span> Доступно у Преміум
+                  <div onClick={() => router.push('/pricing')} className="cursor-pointer text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5 flex items-center gap-2 hover:bg-amber-100 transition-colors">
+                    <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">PRO</span> Завантаження фото доступне у Premium
                   </div>
                 ) : form.photoUrl ? (
                   <div className="relative inline-block">

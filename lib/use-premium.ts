@@ -4,9 +4,14 @@ import { useSession } from 'next-auth/react'
 
 export function usePremium() {
   const { data: session } = useSession()
-  const isPremium = session?.user?.isPremium ?? false
   const isAdmin = session?.user?.role === 'ADMIN'
-  return { isPremium: isPremium || isAdmin, isAdmin }
+  let isPremium = session?.user?.isPremium ?? false
+  // Check if premium expired
+  const premiumUntil = session?.user?.premiumUntil
+  if (isPremium && premiumUntil && new Date(premiumUntil) < new Date()) {
+    isPremium = false
+  }
+  return { isPremium: isPremium || isAdmin, isAdmin, premiumUntil }
 }
 
 // Free tier limits

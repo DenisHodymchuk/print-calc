@@ -76,6 +76,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           token.role = dbUser.role ?? 'USER'
           const premiumUntil = dbUser.premiumUntil as Date | null
           token.isPremium = (dbUser.isPremium ?? false) && (!premiumUntil || premiumUntil > new Date())
+          token.premiumUntil = premiumUntil?.toISOString() || null
         }
       }
       return token
@@ -85,6 +86,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string
         session.user.role = token.role as string
         session.user.isPremium = token.isPremium as boolean
+        session.user.premiumUntil = token.premiumUntil as string | null
       }
       return session
     },

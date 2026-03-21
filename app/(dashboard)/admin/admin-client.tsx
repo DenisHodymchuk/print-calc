@@ -71,9 +71,25 @@ export function AdminClient() {
     }
   }
 
+  async function grantTrialAll() {
+    if (!confirm('Дати PRO всім користувачам на 30 днів?')) return
+    const res = await fetch('/api/admin/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'trialAll', days: 30 }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      toast.success(`PRO активовано для ${data.count} користувачів на 30 днів`)
+      fetchUsers()
+    } else {
+      toast.error('Помилка')
+    }
+  }
+
   return (
     <div className="p-6 space-y-6">
-      <div className="flex gap-3">
+      <div className="flex gap-3 items-center flex-wrap">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Пошук за email..." className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
@@ -81,6 +97,9 @@ export function AdminClient() {
         <Badge variant="outline" className="text-sm px-3">
           {users.length} користувач(ів)
         </Badge>
+        <Button size="sm" variant="outline" className="gap-1.5 text-xs ml-auto" onClick={grantTrialAll}>
+          <Crown className="w-3.5 h-3.5 text-amber-500" /> PRO всім на 30 днів
+        </Button>
       </div>
 
       {loading ? (
@@ -106,6 +125,7 @@ export function AdminClient() {
                       {u.isPremium && (
                         <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                           <Crown className="w-2.5 h-2.5" /> PRO
+                          {u.premiumUntil && <span className="opacity-75">до {new Date(u.premiumUntil).toLocaleDateString('uk-UA')}</span>}
                         </span>
                       )}
                     </div>
