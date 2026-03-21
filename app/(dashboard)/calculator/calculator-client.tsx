@@ -19,22 +19,29 @@ type Printer = { id: string; name: string; brand: string | null; purchasePrice: 
 type PostStep = { name: string; timeMinutes: number; materialCost: number }
 type AmsMaterial = { materialId: string; weightGrams: string }
 
-function useDropdownPos(open: boolean) {
+function useDropdownPos(open: boolean, onClose?: () => void) {
   const btnRef = useRef<HTMLButtonElement>(null)
   const popupRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
   useEffect(() => {
     if (open && btnRef.current) {
       const r = btnRef.current.getBoundingClientRect()
-      setPos({ top: r.bottom + window.scrollY + 4, left: r.left + window.scrollX, width: r.width })
+      setPos({ top: r.bottom + 4, left: r.left, width: r.width })
     }
   }, [open])
+  useEffect(() => {
+    if (!open || !onClose) return
+    const handle = () => onClose()
+    window.addEventListener('scroll', handle, true)
+    return () => window.removeEventListener('scroll', handle, true)
+  }, [open, onClose])
   return { btnRef, popupRef, pos }
 }
 
 function PrinterSelect({ printers, value, onChange }: { printers: Printer[]; value: string; onChange: (id: string) => void }) {
   const [open, setOpen] = useState(false)
-  const { btnRef, popupRef, pos } = useDropdownPos(open)
+  const close = useRef(() => setOpen(false))
+  const { btnRef, popupRef, pos } = useDropdownPos(open, close.current)
   const selected = printers.find(p => p.id === value)
 
   useEffect(() => {
@@ -81,7 +88,8 @@ function PrinterSelect({ printers, value, onChange }: { printers: Printer[]; val
 
 function MaterialSelect({ materials, value, onChange }: { materials: Material[]; value: string; onChange: (id: string) => void }) {
   const [open, setOpen] = useState(false)
-  const { btnRef, popupRef, pos } = useDropdownPos(open)
+  const close = useRef(() => setOpen(false))
+  const { btnRef, popupRef, pos } = useDropdownPos(open, close.current)
   const selected = materials.find(m => m.id === value)
 
   useEffect(() => {
