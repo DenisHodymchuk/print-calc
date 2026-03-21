@@ -285,10 +285,10 @@ export function CalculatorClient() {
   )
 
   const chartData = [
-    { name: 'Матеріал', value: parseFloat(costs.materialCost.toFixed(2)) },
-    { name: 'Машина', value: parseFloat(costs.machineCost.toFixed(2)) },
-    { name: 'Підготовка', value: parseFloat(costs.laborCost.toFixed(2)) },
-    { name: 'Накладні', value: parseFloat(costs.overheadCost.toFixed(2)) },
+    { name: 'Пластик', value: parseFloat(costs.materialCost.toFixed(2)) },
+    { name: 'Амортизація', value: parseFloat(costs.machineCost.toFixed(2)) },
+    { name: 'Робота', value: parseFloat(costs.laborCost.toFixed(2)) },
+    { name: 'Сервісні', value: parseFloat(costs.overheadCost.toFixed(2)) },
   ].filter(d => d.value > 0)
 
   function addPostStep() {
@@ -432,7 +432,7 @@ export function CalculatorClient() {
                   <Input name="printTimeMinutes" type="number" min="0" value={form.printTimeMinutes} onChange={handleChange} placeholder="240" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Кількість копій</Label>
+                  <Label>Кількість на столі</Label>
                   <Input name="copies" type="number" min="1" value={form.copies} onChange={handleChange} />
                 </div>
               </div>
@@ -618,10 +618,10 @@ export function CalculatorClient() {
 
               <div className="space-y-2 text-sm">
                 {[
-                  { label: 'Матеріал', value: costs.materialCost },
-                  { label: 'Машинний час', value: costs.machineCost },
-                  { label: 'Підготовка', value: costs.laborCost },
-                  { label: 'Накладні', value: costs.overheadCost },
+                  { label: 'Пластик', value: costs.materialCost },
+                  { label: 'Амортизація принтера', value: costs.machineCost },
+                  { label: 'Робота', value: costs.laborCost },
+                  { label: 'Сервісні витрати', value: costs.overheadCost },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex justify-between">
                     <span className="text-muted-foreground">{label}</span>
