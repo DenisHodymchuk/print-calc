@@ -370,9 +370,9 @@ export function CalculatorClient() {
                   >Однотонний</button>
                   <button
                     type="button"
-                    onClick={() => { if (!isPremium) { toast.error('AMS доступний у Преміум'); return }; setUseAms(true) }}
+                    onClick={() => { if (!isPremium) { router.push('/pricing'); return }; setUseAms(true) }}
                     className={`text-xs px-3 py-1.5 border-l border-input transition-colors ${useAms ? 'bg-primary text-white' : 'bg-transparent text-foreground hover:bg-accent'} flex items-center gap-1`}
-                  >{!isPremium && <Lock className="w-3 h-3" />}Багатокольоровий (AMS)</button>
+                  >{!isPremium && <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-1 py-0 rounded">PRO</span>}Багатокольоровий (AMS)</button>
                 </div>
               </div>
 
@@ -554,7 +554,7 @@ export function CalculatorClient() {
                   <Input name="marginPercent" type="number" min="0" value={form.marginPercent} onChange={handleChange} />
                 </div>
                 <div className="space-y-2 relative">
-                  <Label className="flex items-center gap-1">Знижка (%) {!isPremium && <Lock className="w-3 h-3 text-muted-foreground" />}</Label>
+                  <Label className="flex items-center gap-1">Знижка (%) {!isPremium && <span onClick={() => router.push('/pricing')} className="cursor-pointer bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">PRO</span>}</Label>
                   <Input name="discountPercent" type="number" min="0" max="100" value={form.discountPercent} onChange={handleChange} disabled={!isPremium} />
                 </div>
               </div>
@@ -565,7 +565,7 @@ export function CalculatorClient() {
                   <Input name="clientName" value={form.clientName} onChange={handleChange} placeholder="Іван Іваненко" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="flex items-center gap-1">Термін готовності {!isPremium && <Lock className="w-3 h-3 text-muted-foreground" />}</Label>
+                  <Label className="flex items-center gap-1">Термін готовності {!isPremium && <span onClick={() => router.push('/pricing')} className="cursor-pointer bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">PRO</span>}</Label>
                   <Input name="deliveryDate" type="date" value={form.deliveryDate} onChange={handleChange} disabled={!isPremium} />
                 </div>
               </div>
@@ -574,10 +574,10 @@ export function CalculatorClient() {
                 <Input name="notes" value={form.notes} onChange={handleChange} placeholder="Додаткова інформація..." />
               </div>
               <div className="space-y-2">
-                <Label className="flex items-center gap-1">Фото виробу {!isPremium && <Lock className="w-3 h-3 text-muted-foreground" />}</Label>
+                <Label className="flex items-center gap-1">Фото виробу {!isPremium && <span onClick={() => router.push('/pricing')} className="cursor-pointer bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">PRO</span>}</Label>
                 {!isPremium ? (
-                  <div className="text-xs text-muted-foreground border border-dashed border-input rounded-lg px-4 py-3 flex items-center gap-2">
-                    <Lock className="w-3 h-3" /> Доступно у Преміум
+                  <div onClick={() => router.push('/pricing')} className="cursor-pointer text-xs text-muted-foreground border border-dashed border-input rounded-lg px-4 py-3 flex items-center gap-2 hover:bg-accent/50 transition-colors">
+                    <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">PRO</span> Доступно у Преміум
                   </div>
                 ) : form.photoUrl ? (
                   <div className="relative inline-block">

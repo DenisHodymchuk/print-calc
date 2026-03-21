@@ -8,23 +8,28 @@ import { Header } from '@/components/layout/header'
 import { toast } from 'sonner'
 import { usePremium } from '@/lib/use-premium'
 
-const features = [
-  { name: 'Калькулятор вартості', free: true, pro: true },
-  { name: 'Кошторис для клієнта', free: true, pro: true },
-  { name: 'Принтери (до 3)', free: true, pro: false },
-  { name: 'Принтери (необмежено)', free: false, pro: true },
-  { name: 'Філаменти (до 5)', free: true, pro: false },
-  { name: 'Філаменти (необмежено)', free: false, pro: true },
-  { name: 'Розрахунки (до 10)', free: true, pro: false },
-  { name: 'Розрахунки (необмежено)', free: false, pro: true },
-  { name: 'AMS багатокольоровий друк', free: false, pro: true },
-  { name: 'Бібліотека моделей', free: false, pro: true },
-  { name: 'Дашборд з аналітикою', free: false, pro: true },
-  { name: 'Фото виробу в кошторисі', free: false, pro: true },
-  { name: 'Термін готовності', free: false, pro: true },
-  { name: 'Персональні знижки', free: false, pro: true },
-  { name: 'Вибір кількості клієнтом', free: false, pro: true },
-  { name: 'Власний бренд на кошторисі', free: false, pro: true },
+const freeFeatures = [
+  'Калькулятор вартості',
+  'Кошторис для клієнта',
+  'Принтери (до 3)',
+  'Філаменти (до 5)',
+  'Розрахунки (до 10)',
+]
+
+const proFeatures = [
+  'Калькулятор вартості',
+  'Кошторис для клієнта',
+  'Принтери (необмежено)',
+  'Філаменти (необмежено)',
+  'Розрахунки (необмежено)',
+  'AMS багатокольоровий друк',
+  'Бібліотека моделей',
+  'Дашборд з аналітикою',
+  'Фото виробу в кошторисі',
+  'Термін готовності',
+  'Персональні знижки',
+  'Вибір кількості клієнтом',
+  'Власний бренд на кошторисі',
 ]
 
 function Icon({ ok }: { ok: boolean }) {
@@ -77,16 +82,10 @@ export default function PricingPage() {
                 </div>
               )}
               <div className="space-y-2.5">
-                {features.filter(f => f.free).map(f => (
-                  <div key={f.name} className="flex items-center gap-2.5 text-sm">
+                {freeFeatures.map(f => (
+                  <div key={f} className="flex items-center gap-2.5 text-sm">
                     <Icon ok={true} />
-                    <span>{f.name}</span>
-                  </div>
-                ))}
-                {features.filter(f => !f.free).map(f => (
-                  <div key={f.name} className="flex items-center gap-2.5 text-sm text-muted-foreground/50">
-                    <Icon ok={false} />
-                    <span>{f.name}</span>
+                    <span>{f}</span>
                   </div>
                 ))}
               </div>
@@ -112,10 +111,10 @@ export default function PricingPage() {
                 </div>
               )}
               <div className="space-y-2.5">
-                {features.filter(f => f.pro).map(f => (
-                  <div key={f.name} className="flex items-center gap-2.5 text-sm">
+                {proFeatures.map(f => (
+                  <div key={f} className="flex items-center gap-2.5 text-sm">
                     <Icon ok={true} />
-                    <span>{f.name}</span>
+                    <span>{f}</span>
                   </div>
                 ))}
               </div>
