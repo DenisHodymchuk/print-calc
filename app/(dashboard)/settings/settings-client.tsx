@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { Crown } from 'lucide-react'
+import Link from 'next/link'
 
 type UserSettings = {
   email: string
@@ -14,6 +16,8 @@ type UserSettings = {
   businessName: string | null
   hourlyRate: number
   electricityRate: number
+  isPremium: boolean
+  premiumUntil: string | null
 }
 
 export function SettingsClient() {
@@ -125,6 +129,37 @@ export function SettingsClient() {
               {saving ? 'Збереження...' : 'Зберегти'}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Subscription */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Crown className={`w-5 h-5 ${settings?.isPremium ? 'text-amber-500' : 'text-muted-foreground'}`} />
+              <div>
+                <p className="font-medium text-sm">
+                  {settings?.isPremium ? 'Premium активний' : 'Безкоштовний план'}
+                </p>
+                {settings?.isPremium && settings.premiumUntil ? (
+                  <p className="text-xs text-muted-foreground">
+                    Діє до {new Date(settings.premiumUntil).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    {' '}({Math.max(0, Math.ceil((new Date(settings.premiumUntil).getTime() - Date.now()) / 86400000))} днів)
+                  </p>
+                ) : settings?.isPremium ? (
+                  <p className="text-xs text-muted-foreground">Безстроковий доступ</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Обмежений функціонал</p>
+                )}
+              </div>
+            </div>
+            {!settings?.isPremium && (
+              <Link href="/pricing" className="text-xs bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold px-3 py-1.5 rounded-lg hover:opacity-90 transition-opacity">
+                Отримати PRO
+              </Link>
+            )}
+          </div>
         </CardContent>
       </Card>
 

@@ -68,11 +68,15 @@ export function Navbar() {
               <AvatarFallback className="text-xs bg-primary text-white">{initials}</AvatarFallback>
             </Avatar>
             <span className="hidden sm:block">{session?.user?.name || session?.user?.email}</span>
-            {isPremium && (
-              <span className="inline-flex items-center gap-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full" title={premiumUntil ? `PRO до ${new Date(premiumUntil).toLocaleDateString('uk-UA')}` : 'PRO назавжди'}>
-                <Crown className="w-2.5 h-2.5" />PRO
-              </span>
-            )}
+            {isPremium && (() => {
+              const daysLeft = premiumUntil ? Math.max(0, Math.ceil((new Date(premiumUntil).getTime() - Date.now()) / 86400000)) : null
+              return (
+                <span className="inline-flex items-center gap-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full" title={premiumUntil ? `PRO до ${new Date(premiumUntil).toLocaleDateString('uk-UA')}` : 'PRO назавжди'}>
+                  <Crown className="w-2.5 h-2.5" />PRO
+                  {daysLeft !== null && <span className="opacity-75 ml-0.5">{daysLeft}д</span>}
+                </span>
+              )
+            })()}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             {isAdmin && (
