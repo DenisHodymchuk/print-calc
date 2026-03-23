@@ -7,7 +7,7 @@ import { DndContext, DragEndEvent, useDroppable, useDraggable } from '@dnd-kit/c
 import { CSS } from '@dnd-kit/utilities'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ExternalLink, Clock, User, ImageIcon } from 'lucide-react'
+import { ExternalLink, Clock, User, ImageIcon, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -30,12 +30,15 @@ export type BoardCalculation = {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const COLUMNS: { id: string; label: string }[] = [
-  { id: 'DRAFT',    label: 'Чернетки'     },
-  { id: 'QUOTED',   label: 'Кошторис'     },
-  { id: 'APPROVED', label: 'Підтверджено' },
-  { id: 'PRINTING', label: 'Друкується'   },
-  { id: 'DONE',     label: 'Готово'       },
+  { id: 'DRAFT',     label: 'Чернетки'     },
+  { id: 'QUOTED',    label: 'Кошторис'     },
+  { id: 'APPROVED',  label: 'Підтверджено' },
+  { id: 'PRINTING',  label: 'Друкується'   },
+  { id: 'DONE',      label: 'Готово'       },
+  { id: 'CANCELLED', label: 'Скасовано'    },
 ]
+
+const CARDS_LIMIT = 10
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
@@ -43,7 +46,7 @@ export function groupByStatus(
   calcs: BoardCalculation[]
 ): Record<string, BoardCalculation[]> {
   const groups: Record<string, BoardCalculation[]> = {
-    DRAFT: [], QUOTED: [], APPROVED: [], PRINTING: [], DONE: [],
+    DRAFT: [], QUOTED: [], APPROVED: [], PRINTING: [], DONE: [], CANCELLED: [],
   }
   for (const c of calcs) {
     if (groups[c.status]) groups[c.status].push(c)
@@ -238,6 +241,7 @@ export function BoardClient() {
   const [calculations, setCalculations] = useState<BoardCalculation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     fetch('/api/calculations')
@@ -303,18 +307,29 @@ export function BoardClient() {
                     <span className="text-xs text-muted-foreground">Немає замовлень</span>
                   </div>
                 ) : (
-                  grouped[col.id].map(calc => (
-                    <DraggableCardWrapper key={calc.id} id={calc.id}>
-                      {({ listeners, attributes, isDragging }) => (
-                        <KanbanCard
-                          calc={calc}
-                          dragListeners={listeners}
-                          dragAttributes={attributes}
-                          isDragging={isDragging}
-                        />
-                      )}
-                    </DraggableCardWrapper>
-                  ))
+                  <>
+                    {(expanded[col.id] ? grouped[col.id] : grouped[col.id].slice(0, CARDS_LIMIT)).map(calc => (
+                      <DraggableCardWrapper key={calc.id} id={calc.id}>
+                        {({ listeners, attributes, isDragging }) => (
+                          <KanbanCard
+                            calc={calc}
+                            dragListeners={listeners}
+                            dragAttributes={attributes}
+                            isDragging={isDragging}
+                          />
+                        )}
+                      </DraggableCardWrapper>
+                    ))}
+                    {grouped[col.id].length > CARDS_LIMIT && !expanded[col.id] && (
+                      <button
+                        onClick={() => setExpanded(prev => ({ ...prev, [col.id]: true }))}
+                        className="w-full py-2 text-xs text-muted-foreground hover:text-foreground flex items-center justify-center gap-1 transition-colors"
+                      >
+                        <ChevronDown className="w-3 h-3" />
+                        Показати ще {grouped[col.id].length - CARDS_LIMIT}
+                      </button>
+                    )}
+                  </>
                 )}
               </DroppableColumn>
             </div>

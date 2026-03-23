@@ -40,15 +40,15 @@ function parseAmsMaterials(raw: string | null): AmsMaterialEntry[] {
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT: 'Чернетка', QUOTED: 'Кошторис', APPROVED: 'Підтверджено',
-  PRINTING: 'Друкується', DONE: 'Готово',
+  PRINTING: 'Друкується', DONE: 'Готово', CANCELLED: 'Скасовано',
 }
 
 const STATUS_COLORS: Record<string, 'secondary' | 'default' | 'outline' | 'destructive'> = {
   DRAFT: 'secondary', QUOTED: 'outline', APPROVED: 'default',
-  PRINTING: 'default', DONE: 'secondary',
+  PRINTING: 'default', DONE: 'secondary', CANCELLED: 'destructive',
 }
 
-const STATUS_ORDER = ['DRAFT', 'QUOTED', 'APPROVED', 'PRINTING', 'DONE']
+const STATUS_ORDER = ['DRAFT', 'QUOTED', 'APPROVED', 'PRINTING', 'DONE', 'CANCELLED']
 
 function StatusDropdown({ status, onChangeStatus }: { status: string; onChangeStatus: (s: string) => void }) {
   const [open, setOpen] = useState(false)
