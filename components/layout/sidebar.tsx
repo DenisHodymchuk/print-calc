@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   ChevronRight,
+  KanbanSquare,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -21,6 +22,7 @@ const navItems = [
   { href: '/dashboard', label: 'Дашборд', icon: LayoutDashboard },
   { href: '/calculator', label: 'Калькулятор', icon: Calculator },
   { href: '/calculations', label: 'Розрахунки', icon: History },
+  { href: '/board', label: 'Дошка', icon: KanbanSquare },
   { href: '/materials', label: 'Матеріали', icon: Layers },
   { href: '/printers', label: 'Принтери', icon: Printer },
   { href: '/settings', label: 'Налаштування', icon: Settings },
