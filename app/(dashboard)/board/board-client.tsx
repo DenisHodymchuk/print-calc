@@ -91,8 +91,8 @@ function DroppableColumn({ id, children }: { id: string; children: React.ReactNo
     <div
       ref={setNodeRef}
       className={cn(
-        'flex-1 flex flex-col gap-2 rounded-lg p-1 transition-colors',
-        isOver && 'bg-primary/5 ring-2 ring-primary/30'
+        'flex-1 flex flex-col gap-2 rounded-lg border-2 border-dashed border-border/50 p-1.5 transition-colors',
+        isOver && 'bg-primary/5 border-primary/30'
       )}
     >
       {children}
@@ -143,7 +143,7 @@ function KanbanCard({
       )}
       {...dragListeners}
       {...dragAttributes}
-      onClick={() => router.push(`/calculator/${calc.id}`)}
+      onClick={() => router.push(`/calculator?edit=${calc.id}`)}
     >
       {/* Top row: photo + name + price */}
       <div className="flex items-start gap-2">
@@ -299,7 +299,7 @@ export function BoardClient() {
                 {loading ? (
                   <ColumnSkeleton />
                 ) : grouped[col.id].length === 0 ? (
-                  <div className="flex-1 rounded-lg border-2 border-dashed border-border flex items-center justify-center">
+                  <div className="flex-1 flex items-center justify-center">
                     <span className="text-xs text-muted-foreground">Немає замовлень</span>
                   </div>
                 ) : (
