@@ -236,6 +236,15 @@ export function CalculatorClient() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
+  function handlePrintTimeChange(field: 'hours' | 'mins', value: string) {
+    const total = parseFloat(form.printTimeMinutes) || 0
+    const curHours = Math.floor(total / 60)
+    const curMins = total % 60
+    const h = field === 'hours' ? (parseInt(value) || 0) : curHours
+    const m = field === 'mins' ? (parseInt(value) || 0) : curMins
+    setForm(prev => ({ ...prev, printTimeMinutes: String(h * 60 + m) }))
+  }
+
   function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -436,8 +445,27 @@ export function CalculatorClient() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label>Час друку (хв)</Label>
-                  <Input name="printTimeMinutes" type="number" min="0" value={form.printTimeMinutes} onChange={handleChange} placeholder="240" />
+                  <Label>Час друку</Label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Input
+                        type="number" min="0"
+                        value={form.printTimeMinutes ? Math.floor((parseFloat(form.printTimeMinutes) || 0) / 60) || '' : ''}
+                        onChange={e => handlePrintTimeChange('hours', e.target.value)}
+                        placeholder="4"
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">год</span>
+                    </div>
+                    <div className="relative flex-1">
+                      <Input
+                        type="number" min="0" max="59"
+                        value={form.printTimeMinutes ? (parseFloat(form.printTimeMinutes) || 0) % 60 || '' : ''}
+                        onChange={e => handlePrintTimeChange('mins', e.target.value)}
+                        placeholder="00"
+                      />
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">хв</span>
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Кількість на столі</Label>
