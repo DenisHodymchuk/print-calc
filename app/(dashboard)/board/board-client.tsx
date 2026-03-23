@@ -92,7 +92,7 @@ function DroppableColumn({ id, children }: { id: string; children: React.ReactNo
     <div
       ref={setNodeRef}
       className={cn(
-        'flex-1 space-y-2 min-h-16 rounded-lg p-1 transition-colors',
+        'flex-1 flex flex-col gap-2 rounded-lg p-1 transition-colors',
         isOver && 'bg-primary/5 ring-2 ring-primary/30'
       )}
     >
@@ -303,7 +303,7 @@ export function BoardClient() {
                 {loading ? (
                   <ColumnSkeleton />
                 ) : grouped[col.id].length === 0 ? (
-                  <div className="h-full min-h-20 rounded-lg border-2 border-dashed border-border flex items-center justify-center">
+                  <div className="flex-1 rounded-lg border-2 border-dashed border-border flex items-center justify-center">
                     <span className="text-xs text-muted-foreground">Немає замовлень</span>
                   </div>
                 ) : (
