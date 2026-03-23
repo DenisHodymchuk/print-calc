@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Search, Crown, Shield, UserIcon } from 'lucide-react'
+import { Search, Crown, Shield, UserIcon, Sparkles } from 'lucide-react'
 
 type UserInfo = {
   id: string
@@ -122,6 +122,41 @@ export function AdminClient() {
           {promoEnabled ? 'Вимкнути' : 'Увімкнути'}
         </Button>
       </div>
+
+      {/* New users (last 3 days) */}
+      {!loading && (() => {
+        const threeDaysAgo = new Date()
+        threeDaysAgo.setDate(threeDaysAgo.getDate() - 3)
+        const newUsers = users.filter(u => new Date(u.createdAt) >= threeDaysAgo)
+        if (newUsers.length === 0) return null
+        return (
+          <div className="rounded-lg border border-green-200 bg-green-50/50 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-semibold text-green-800">Нові користувачі</span>
+              <Badge variant="secondary" className="text-xs">{newUsers.length}</Badge>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {newUsers.map(u => (
+                <div key={u.id} className="flex items-center gap-2 bg-white rounded-md border px-3 py-2 text-sm">
+                  <UserIcon className="w-4 h-4 text-muted-foreground" />
+                  <div>
+                    <span className="font-medium">{u.name || u.email}</span>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {new Date(u.createdAt).toLocaleDateString('uk-UA')}
+                    </span>
+                  </div>
+                  {u.isPremium && (
+                    <span className="inline-flex items-center gap-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                      <Crown className="w-2.5 h-2.5" />PRO
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
 
       {loading ? (
         <p className="text-muted-foreground">Завантаження...</p>
