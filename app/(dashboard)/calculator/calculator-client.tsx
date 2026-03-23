@@ -159,6 +159,8 @@ export function CalculatorClient() {
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   // Form state
+  const [status, setStatus] = useState('DRAFT')
+
   const [form, setForm] = useState({
     name: '',
     printerId: '',
@@ -214,6 +216,7 @@ export function CalculatorClient() {
         notes: data.notes || '',
         photoUrl: data.photoUrl || '',
       })
+      if (data.status) setStatus(data.status)
       if (data.postProcessSteps?.length) {
         setPostSteps(data.postProcessSteps.map((s: PostStep & { id?: string }) => ({ name: s.name, timeMinutes: s.timeMinutes, materialCost: s.materialCost })))
       }
@@ -330,6 +333,7 @@ export function CalculatorClient() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...form,
+        status,
         postProcessSteps: postSteps,
         ...(modelId ? { modelId } : {}),
         ...(useAms ? { amsMaterials: amsMaterials.filter(am => am.materialId && am.weightGrams) } : {}),
@@ -359,6 +363,35 @@ export function CalculatorClient() {
                 <Label>Назва виробу</Label>
                 <Input name="name" value={form.name} onChange={handleChange} placeholder="Напр: Підставка для телефону" />
               </div>
+
+              {editId && (
+                <div className="space-y-2">
+                  <Label>Статус</Label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {[
+                      { value: 'DRAFT', label: 'Чернетка' },
+                      { value: 'QUOTED', label: 'Кошторис' },
+                      { value: 'APPROVED', label: 'Підтверджено' },
+                      { value: 'PRINTING', label: 'Друкується' },
+                      { value: 'DONE', label: 'Готово' },
+                      { value: 'CANCELLED', label: 'Скасовано' },
+                    ].map(s => (
+                      <button
+                        key={s.value}
+                        type="button"
+                        onClick={() => setStatus(s.value)}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                          status === s.value
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground hover:bg-accent'
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Принтер</Label>
                 <PrinterSelect
