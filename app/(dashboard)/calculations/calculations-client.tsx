@@ -70,12 +70,17 @@ function StatusDropdown({ status, onChangeStatus }: { status: string; onChangeSt
       if (btnRef.current?.contains(t) || popupRef.current?.contains(t)) return
       setOpen(false)
     }
+    function onScroll() { setOpen(false) }
     document.addEventListener('mousedown', handle)
-    return () => document.removeEventListener('mousedown', handle)
+    window.addEventListener('scroll', onScroll, true)
+    return () => {
+      document.removeEventListener('mousedown', handle)
+      window.removeEventListener('scroll', onScroll, true)
+    }
   }, [open])
 
   return (
-    <div className="inline-flex">
+    <div className="relative inline-flex">
       <button
         ref={btnRef}
         onClick={() => setOpen(o => !o)}
@@ -89,8 +94,7 @@ function StatusDropdown({ status, onChangeStatus }: { status: string; onChangeSt
       {open && (
         <div
           ref={popupRef}
-          className="fixed z-[200] rounded-lg border border-input bg-white shadow-lg overflow-hidden min-w-[140px]"
-          style={{ top: pos.top, left: pos.left }}
+          className="absolute top-full left-0 mt-1 z-[200] rounded-lg border border-input bg-white shadow-lg overflow-hidden min-w-[140px]"
         >
           {STATUS_ORDER.map(s => (
             <button
