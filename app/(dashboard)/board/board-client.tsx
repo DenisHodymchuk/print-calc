@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { DndContext, DragEndEvent, useDroppable, useDraggable } from '@dnd-kit/core'
+import { DndContext, DragEndEvent, useDroppable, useDraggable, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { ExternalLink, Clock, User, ImageIcon, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -135,7 +134,6 @@ function KanbanCard({
   isDragging?: boolean
 }) {
   const router = useRouter()
-  const didDrag = useRef(false)
 
   return (
     <div
@@ -145,11 +143,7 @@ function KanbanCard({
       )}
       {...dragListeners}
       {...dragAttributes}
-      onPointerDown={() => { didDrag.current = false }}
-      onPointerMove={() => { didDrag.current = true }}
-      onPointerUp={() => {
-        if (!didDrag.current) router.push(`/calculator/${calc.id}`)
-      }}
+      onClick={() => router.push(`/calculator/${calc.id}`)}
     >
       {/* Top row: photo + name + price */}
       <div className="flex items-start gap-2">
@@ -241,6 +235,9 @@ export function BoardClient() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  )
 
   useEffect(() => {
     fetch('/api/calculations')
@@ -286,8 +283,8 @@ export function BoardClient() {
   }
 
   return (
-    <div className="mx-auto px-4 pb-8">
-      <DndContext onDragEnd={handleDragEnd}>
+    <div className="max-w-7xl mx-auto px-4 pb-8">
+      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div className="grid pb-2 min-h-[calc(100vh-160px)] gap-3" style={{ gridTemplateColumns: `repeat(${COLUMNS.length}, minmax(0, 1fr))` }}>
           {COLUMNS.map(col => (
             <div key={col.id} className="flex flex-col min-w-0">
