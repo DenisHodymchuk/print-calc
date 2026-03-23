@@ -450,20 +450,22 @@ export function CalculatorClient() {
                     <div className="relative flex-1">
                       <Input
                         type="number" min="0"
+                        className="pr-10"
                         value={form.printTimeMinutes ? Math.floor((parseFloat(form.printTimeMinutes) || 0) / 60) || '' : ''}
                         onChange={e => handlePrintTimeChange('hours', e.target.value)}
                         placeholder="4"
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">год</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">год</span>
                     </div>
                     <div className="relative flex-1">
                       <Input
                         type="number" min="0" max="59"
+                        className="pr-10"
                         value={form.printTimeMinutes ? (parseFloat(form.printTimeMinutes) || 0) % 60 || '' : ''}
                         onChange={e => handlePrintTimeChange('mins', e.target.value)}
                         placeholder="00"
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">хв</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">хв</span>
                     </div>
                   </div>
                 </div>
