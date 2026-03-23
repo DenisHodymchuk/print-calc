@@ -8,7 +8,7 @@ const geist = Geist({
 })
 
 export const metadata: Metadata = {
-  title: '3D Калькулятор друку',
+  title: 'Buba Lab 3D — Калькулятор друку',
   description: 'Калькулятор вартості 3D друку для вашого бізнесу',
 }
 

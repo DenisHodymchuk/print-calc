@@ -39,7 +39,7 @@ export function Sidebar() {
             <Printer className="w-4 h-4 text-primary-foreground" />
           </div>
           <div>
-            <p className="font-semibold text-sm leading-tight">3D Калькулятор</p>
+            <p className="font-semibold text-sm leading-tight">Buba Lab 3D</p>
             <p className="text-xs text-muted-foreground">Друк і витрати</p>
           </div>
         </div>

@@ -56,7 +56,7 @@ export default function LoginPage() {
             <Printer className="w-5 h-5 text-primary" />
           </div>
           <span className="font-black text-xl tracking-tight">
-            3D Print <span className="text-primary">UA</span>
+            Buba Lab <span className="text-primary">3D</span>
           </span>
         </div>
 

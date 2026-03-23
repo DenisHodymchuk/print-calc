@@ -36,7 +36,7 @@ export function Navbar() {
             <Printer className="w-4 h-4 text-white" />
           </div>
           <span className="font-bold text-sm tracking-wide">
-            3D Print <span className="text-primary">UA</span>
+            Buba Lab <span className="text-primary">3D</span>
           </span>
         </Link>
 
