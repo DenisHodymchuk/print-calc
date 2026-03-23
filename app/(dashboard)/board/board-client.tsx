@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { DndContext, DragEndEvent, useDroppable, useDraggable } from '@dnd-kit/core'
@@ -135,15 +135,21 @@ function KanbanCard({
   isDragging?: boolean
 }) {
   const router = useRouter()
+  const didDrag = useRef(false)
 
   return (
     <div
       className={cn(
-        'bg-card border rounded-lg p-3 space-y-2 cursor-grab select-none shadow-sm',
+        'bg-card border rounded-lg p-3 space-y-2 cursor-grab select-none shadow-sm hover:shadow-md transition-shadow',
         isDragging && 'opacity-40 shadow-lg'
       )}
       {...dragListeners}
       {...dragAttributes}
+      onPointerDown={() => { didDrag.current = false }}
+      onPointerMove={() => { didDrag.current = true }}
+      onPointerUp={() => {
+        if (!didDrag.current) router.push(`/calculator/${calc.id}`)
+      }}
     >
       {/* Top row: photo + name + price */}
       <div className="flex items-start gap-2">
@@ -210,14 +216,7 @@ function KanbanCard({
             {new Date(calc.deliveryDate).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })}
           </span>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-6 h-6 ml-auto"
-          onClick={e => { e.stopPropagation(); router.push(`/calculator/${calc.id}`) }}
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-        </Button>
+        <ExternalLink className="w-3.5 h-3.5 ml-auto text-muted-foreground" />
       </div>
     </div>
   )
@@ -287,11 +286,11 @@ export function BoardClient() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto px-4 pb-8">
+    <div className="mx-auto px-4 pb-8">
       <DndContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-2 min-h-[calc(100vh-160px)]">
+        <div className="grid pb-2 min-h-[calc(100vh-160px)] gap-3" style={{ gridTemplateColumns: `repeat(${COLUMNS.length}, minmax(0, 1fr))` }}>
           {COLUMNS.map(col => (
-            <div key={col.id} className="flex-shrink-0 w-64 flex flex-col">
+            <div key={col.id} className="flex flex-col min-w-0">
               <div className="flex items-center gap-2 mb-3 px-1">
                 <span className="font-semibold text-sm">{col.label}</span>
                 <Badge variant="secondary" className="text-xs h-5 min-w-5 px-1.5">
